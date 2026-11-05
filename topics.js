@@ -1,0 +1,706 @@
+// Scripture-based devotionals and prayers. Text is original writing by BBotnics Industries; scripture is quoted from the reader's chosen translation at runtime.
+export const TOPICS = [
+  {
+    id: 'financial-breakthrough',
+    title: 'Financial Breakthrough',
+    icon: '💰',
+    kind: 'prayer',
+    summary: 'Trusting God as provider while walking in faithful stewardship and generosity.',
+    sections: [
+      {
+        heading: 'God Is Your Provider',
+        refs: ['Philippians 4:19', 'Matthew 6:31-33', 'Psalms 37:25'],
+        text: 'God knows every need before you speak it. Jesus invites us to stop striving in worry and to seek His kingdom first, trusting the Father to supply what we truly need. Generations of believers testify that He does not forsake His own.',
+      },
+      {
+        heading: 'Faithful Stewardship',
+        refs: ['Proverbs 3:9-10', 'Luke 16:10-11', 'Proverbs 21:5'],
+        text: 'Breakthrough often begins with faithfulness in small things. Honouring God first, planning diligently and handling little well are the soil in which He grows greater trust. Stewardship is worship, not a formula.',
+      },
+      {
+        heading: 'A Generous Heart',
+        refs: ['2 Corinthians 9:6-8', 'Malachi 3:10', 'Proverbs 11:24-25'],
+        text: 'God loves a cheerful giver and is able to make all grace abound so that we have enough for every good work. Generosity loosens the grip of fear and opens our hands to receive and to pass on His blessing.',
+      },
+      {
+        heading: 'Contentment and Freedom from Debt',
+        refs: ['Hebrews 13:5', 'Philippians 4:11-13', 'Romans 13:8'],
+        text: 'True wealth is the presence of God who promises never to leave us. Contentment is learned, and Christ gives strength for seasons of plenty and of want. We aim to owe nothing but love.',
+      },
+    ],
+    prayer: 'Heavenly Father, You are my provider and You know every need I carry today. I bring You my bills, my income, my debts and my worries, and I lay them at Your feet. Your Word says You will supply all my needs according to Your riches in glory in Christ Jesus, so I choose to seek Your kingdom first and trust You for the rest. Forgive me where I have spent carelessly, borrowed fearfully or held on too tightly. Teach me to be faithful with little, to plan wisely and to work diligently. Give me a generous and cheerful heart, because You are able to make all grace abound to me so that I have enough for every good work. Open doors of honest work and provision, show me wise ways out of debt, and guard me from the love of money. Where I am anxious, settle me with the promise that You will never leave me nor forsake me. Let my finances become a testimony of Your faithfulness and a blessing to others. In Jesus\' name, Amen.',
+    declarations: [
+      'My God supplies all my needs according to His riches in Christ Jesus.',
+      'I seek first the kingdom of God, and He adds what I need.',
+      'I am a faithful steward of everything God puts in my hands.',
+      'I give cheerfully, and God makes His grace abound toward me.',
+      'I am content, for the Lord will never leave me nor forsake me.',
+    ],
+  },
+  {
+    id: 'spiritual-warfare',
+    title: 'Spiritual Warfare',
+    icon: '🛡️',
+    kind: 'prayer',
+    summary: 'Standing firm in the armour of God and the victory of Christ.',
+    sections: [
+      {
+        heading: 'Know Your Real Enemy',
+        refs: ['Ephesians 6:10-12', '1 Peter 5:8-9', '2 Corinthians 10:3-5'],
+        text: 'Our struggle is not against people but against spiritual forces of darkness. We stay alert, resist the enemy firm in faith, and take every thought captive to obey Christ. Our weapons are spiritual and mighty through God.',
+      },
+      {
+        heading: 'Put On the Whole Armour',
+        refs: ['Ephesians 6:13-18', 'Romans 13:12'],
+        text: 'Truth, righteousness, the gospel of peace, faith, salvation and the Word of God are our armour, and prayer in the Spirit holds it all together. We do not fight in our own strength but stand in what God has already provided, casting off darkness and putting on the armour of light.',
+      },
+      {
+        heading: 'Victory Through Christ',
+        refs: ['James 4:7', '1 John 4:4', 'Colossians 2:15', 'Revelation 12:11'],
+        text: 'Submit to God, resist the devil, and he will flee. Greater is He who is in you than he who is in the world. At the cross Jesus disarmed the powers of darkness, and believers overcome by His blood and their testimony.',
+      },
+    ],
+    prayer: 'Lord Jesus, I thank You that You have already triumphed over every power of darkness through the cross. I submit myself to You completely: my mind, my body, my home, my family and my future. Today I put on the whole armour of God. I fasten the belt of truth, I wear the breastplate of righteousness that is mine in Christ, and I stand ready with the gospel of peace. I lift up the shield of faith to quench every fiery dart of the enemy, I guard my mind with the helmet of salvation, and I take up the sword of the Spirit, which is Your Word. I recognise that my battle is not against flesh and blood, so help me to love people even while I resist the schemes of the enemy. I take every lying thought captive and bring it into obedience to Christ. In Your authority I resist the devil, and I trust Your promise that he must flee. Greater is He who lives in me than he who is in the world. Cover me and those I love with the precious blood of Jesus. In Jesus\' name, Amen.',
+    declarations: [
+      'I am strong in the Lord and in the power of His might.',
+      'I submit to God and resist the devil, and he flees from me.',
+      'Greater is He who is in me than he who is in the world.',
+      'I take every thought captive to obey Christ.',
+      'I overcome by the blood of the Lamb and the word of my testimony.',
+    ],
+  },
+  {
+    id: 'healing',
+    title: 'Healing',
+    icon: '🩹',
+    kind: 'prayer',
+    summary: 'Bringing sickness and pain to the God who heals, with faith and surrender.',
+    sections: [
+      {
+        heading: 'The Lord Who Heals',
+        refs: ['Exodus 15:26', 'Psalms 103:2-5', 'Jeremiah 17:14'],
+        text: 'God reveals Himself as the Lord who heals. He forgives all our sins and heals our diseases, and He is the One we cry to for restoration. Healing begins with remembering who He is.',
+      },
+      {
+        heading: 'By His Wounds',
+        refs: ['Isaiah 53:4-5', 'Matthew 8:16-17', '1 Peter 2:24'],
+        text: 'Jesus carried our griefs and sorrows to the cross, and by His wounds we are healed. In His earthly ministry He healed all who came to Him, showing the Father\'s heart toward the sick.',
+      },
+      {
+        heading: 'Pray with Faith and Community',
+        refs: ['James 5:14-16', 'Mark 5:34'],
+        text: 'Scripture invites the sick to call on the elders and the church to pray. The prayer of faith is powerful, and Jesus honoured those who reached out to Him in trust. We pray boldly and leave the outcome in His loving hands.',
+      },
+      {
+        heading: 'Grace When Healing Waits',
+        refs: ['2 Corinthians 12:9', 'Psalms 73:26', 'Revelation 21:4'],
+        text: 'Sometimes healing comes slowly or awaits eternity. Even then His grace is sufficient, He is the strength of our heart, and a day is coming when there will be no more pain.',
+      },
+    ],
+    prayer: 'Lord, You are Jehovah Rapha, the God who heals. I come to You with this body and this pain, and I ask You to touch me with Your healing power. I bless You and remember all Your benefits: You forgive my sins, You heal my diseases, You redeem my life from the pit and crown me with love and mercy. Jesus, You carried my sorrows and bore my sickness, and by Your wounds I am healed. Just as You healed all who came to You, I come to You now. Bring strength to every weak place, peace to every troubled organ, and wisdom to the doctors and nurses who care for me. Where fear rises, fill me with faith. Where healing is slow, let Your grace be sufficient for me and Your power be made perfect in my weakness. Thank You that my flesh may fail but You are the strength of my heart and my portion forever. I trust You with my body, my treatment and my future, knowing that one day You will wipe away every tear. In Jesus\' name, Amen.',
+    declarations: [
+      'The Lord is my healer, and I put my trust in Him.',
+      'By the wounds of Jesus I am healed.',
+      'I will bless the Lord and forget none of His benefits.',
+      'His grace is sufficient for me in every weakness.',
+    ],
+  },
+  {
+    id: 'protection',
+    title: 'Protection',
+    icon: '🏰',
+    kind: 'prayer',
+    summary: 'Dwelling in the shelter of the Most High and resting in His watchful care.',
+    sections: [
+      {
+        heading: 'Under His Wings',
+        refs: ['Psalms 91:1-4', 'Psalms 91:9-12'],
+        text: 'Those who dwell in God\'s shelter rest in His shadow. He covers us with His feathers, His faithfulness is our shield, and He commands His angels concerning us. Protection begins with abiding.',
+      },
+      {
+        heading: 'The Lord Watches Over You',
+        refs: ['Psalms 121:1-8', 'Psalms 34:7'],
+        text: 'Our help comes from the Maker of heaven and earth. He never slumbers, He shades us by day and night, and He guards our going out and coming in, now and forever. His angel camps around those who fear Him.',
+      },
+      {
+        heading: 'A Strong Tower',
+        refs: ['Proverbs 18:10', '2 Thessalonians 3:3', 'Isaiah 54:17'],
+        text: 'The name of the Lord is a strong tower; the righteous run into it and are safe. The Lord is faithful to strengthen and guard us from the evil one, and no weapon formed against His servants will ultimately prevail.',
+      },
+    ],
+    prayer: 'Most High God, I choose to dwell in Your shelter and rest in Your shadow today. You are my refuge and my fortress, my God in whom I trust. Cover me with Your feathers and hide me under Your wings, and let Your faithfulness be my shield. I will not fear the terror of the night or the arrow that flies by day, because You are with me. Command Your angels concerning me and my loved ones, to guard us in all our ways. I lift my eyes to You, the Maker of heaven and earth. You do not slumber or sleep, so I can rest. Watch over my going out and my coming in, on the roads, at work, at school and at home. Your name is a strong tower and I run into it. Guard me from the evil one and from every harmful plan, and let no weapon formed against me prosper. Keep my mind free from fear and my heart anchored in Your love. In Jesus\' name, Amen.',
+    declarations: [
+      'I dwell in the shelter of the Most High and rest in His shadow.',
+      'The Lord is my refuge and my fortress; I trust in Him.',
+      'He gives His angels charge over me to keep me in all my ways.',
+      'The Lord watches over my going out and my coming in.',
+      'The name of the Lord is my strong tower, and I am safe.',
+    ],
+  },
+  {
+    id: 'peace-anxiety',
+    title: 'Peace & Anxiety',
+    icon: '🕊️',
+    kind: 'prayer',
+    summary: 'Trading worry for the peace of God that guards the heart and mind.',
+    sections: [
+      {
+        heading: 'Pray Instead of Worry',
+        refs: ['Philippians 4:6-7', '1 Peter 5:7'],
+        text: 'God invites us to bring everything to Him in prayer with thanksgiving. In return He gives a peace beyond understanding that stands guard over our hearts and minds. We can cast all our cares on Him because He cares for us.',
+      },
+      {
+        heading: 'The Peace Jesus Gives',
+        refs: ['John 14:27', 'Isaiah 26:3', 'Matthew 11:28-30'],
+        text: 'Jesus leaves us His own peace, unlike anything the world offers. A mind fixed on God is kept in perfect peace, and He invites the weary to come and find rest for their souls.',
+      },
+      {
+        heading: 'Train Your Thoughts',
+        refs: ['Philippians 4:8-9', 'Psalms 94:19'],
+        text: 'Peace grows as we dwell on what is true, noble and lovely. When anxious thoughts multiply, God\'s comfort can bring joy to the soul again.',
+      },
+    ],
+    prayer: 'Prince of Peace, I bring You the worries that keep circling in my mind. I will not carry them alone any longer. Right now I cast every care on You, because You care for me. I name my fears before You and I thank You that You hear me. Please give me Your peace, the peace that passes all understanding, and let it stand guard over my heart and my mind in Christ Jesus. Jesus, You said You leave Your peace with me and that my heart need not be troubled or afraid. I receive that peace now. Help me to keep my mind fixed on You so that I am kept in perfect peace. Teach me to think on what is true, honourable, pure and lovely, and to let go of imagined disasters. When my anxious thoughts multiply, let Your comfort delight my soul. I come to You weary, and I take Your gentle yoke and find rest. Slow my breathing, quiet my heart, and help me trust You one moment at a time. In Jesus\' name, Amen.',
+    declarations: [
+      'I cast all my anxiety on God, because He cares for me.',
+      'The peace of God guards my heart and my mind in Christ Jesus.',
+      'My mind is stayed on the Lord, and He keeps me in perfect peace.',
+      'I think on what is true, noble, pure and lovely.',
+    ],
+  },
+  {
+    id: 'fear-courage',
+    title: 'Fear & Courage',
+    icon: '🦁',
+    kind: 'prayer',
+    summary: 'Finding courage in the presence and promises of God.',
+    sections: [
+      {
+        heading: 'Do Not Fear, I Am With You',
+        refs: ['Isaiah 41:10', 'Joshua 1:9', 'Deuteronomy 31:6'],
+        text: 'Again and again God tells His people not to fear, and the reason is always the same: He is with them. Courage is not the absence of fear but confidence in His presence.',
+      },
+      {
+        heading: 'A Spirit of Power and Love',
+        refs: ['2 Timothy 1:7', 'Romans 8:15', '1 John 4:18'],
+        text: 'God has not given us a spirit of fear but of power, love and a sound mind. We are adopted children who cry Abba, Father, and His perfect love drives out fear.',
+      },
+      {
+        heading: 'Whom Shall I Fear?',
+        refs: ['Psalms 27:1-3', 'Psalms 56:3-4'],
+        text: 'When the Lord is our light and salvation, the threats around us lose their power. Whenever we are afraid, we can choose to put our trust in Him.',
+      },
+    ],
+    prayer: 'Father, You see the fear that grips me and the situations that make my heart race. Thank You that You do not shame me for being afraid; instead You come close and tell me not to fear because You are with me. I hold on to Your promise that You will strengthen me, help me and uphold me with Your righteous right hand. You have not given me a spirit of fear, but of power, love and a sound mind, so I reject the fear that tries to rule me. I am Your child, not a slave to fear, and I call You Abba, Father. Let Your perfect love drive out every fear in me. You are my light and my salvation; whom shall I fear? You are the stronghold of my life; of whom shall I be afraid? When I am afraid, I will trust in You. Give me courage to take the next step, to speak when I should speak, and to stand firm. Go before me and never leave me. In Jesus\' name, Amen.',
+    declarations: [
+      'I will not fear, for God is with me and will strengthen me.',
+      'God has given me a spirit of power, love and a sound mind.',
+      'The Lord is my light and my salvation; whom shall I fear?',
+      'When I am afraid, I put my trust in God.',
+      'I am strong and courageous, for the Lord goes with me.',
+    ],
+  },
+  {
+    id: 'strength-weakness',
+    title: 'Strength in Weakness',
+    icon: '💪',
+    kind: 'devotional',
+    summary: 'Discovering that God\'s power shows up most in our weakest moments.',
+    sections: [
+      {
+        heading: 'Grace That Is Enough',
+        refs: ['2 Corinthians 12:9-10', '2 Corinthians 4:7-9'],
+        text: 'Paul learned that weakness is the place where Christ\'s power rests on us. We are fragile clay jars carrying a great treasure, pressed but not crushed, struck down but not destroyed.',
+      },
+      {
+        heading: 'Renewed Strength',
+        refs: ['Isaiah 40:29-31', 'Nehemiah 8:10'],
+        text: 'God gives power to the faint and strength to the weak. Those who wait on Him are renewed, and the joy of the Lord becomes our strength when our own runs out.',
+      },
+      {
+        heading: 'Strong in Him',
+        refs: ['Philippians 4:13', 'Psalms 46:1', 'Habakkuk 3:19'],
+        text: 'We can do all things through Christ who strengthens us. God is our refuge and strength, a very present help, and He makes our feet sure on high and difficult places.',
+      },
+    ],
+    prayer: 'Lord, I am tired and I feel weak. I have tried to be strong in my own power and I have come to the end of myself. Thank You that this is not the end of Your strength. Your grace is sufficient for me, and Your power is made perfect in weakness, so I bring You my weakness honestly. I am a clay jar, but You have placed Your treasure in me. I may be pressed on every side, but I will not be crushed. You give power to the faint and increase the strength of those who have none. As I wait on You, renew my strength so that I can rise, run and walk without fainting. Let Your joy be my strength today. I can do all things through Christ who strengthens me, not because I am strong, but because You are. Be my refuge and my very present help, and make my feet steady on the high places of this season. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'guidance-decisions',
+    title: 'Guidance & Decisions',
+    icon: '🧭',
+    kind: 'devotional',
+    summary: 'Seeking God\'s direction and trusting Him to lead step by step.',
+    sections: [
+      {
+        heading: 'Trust and Acknowledge Him',
+        refs: ['Proverbs 3:5-6', 'Proverbs 16:9'],
+        text: 'We plan our way, but the Lord directs our steps. When we trust Him wholeheartedly and acknowledge Him in everything, He makes our paths straight.',
+      },
+      {
+        heading: 'He Will Instruct You',
+        refs: ['Psalms 32:8', 'Isaiah 30:21', 'Psalms 119:105'],
+        text: 'God promises to teach us and guide us with His eye upon us. His Word is a lamp for the next step, and His Spirit can whisper, this is the way, walk in it.',
+      },
+      {
+        heading: 'Ask for Wisdom and Peace',
+        refs: ['James 1:5', 'Colossians 3:15', 'Romans 12:2'],
+        text: 'God gives wisdom generously to those who ask. As our minds are renewed, we learn to discern His good will, and His peace acts as an umpire in our hearts.',
+      },
+    ],
+    prayer: 'Faithful Shepherd, I stand at a crossroads and I need Your direction. I confess that I cannot see the whole path, but You can. I choose to trust You with all my heart and not lean on my own understanding. In all my ways I acknowledge You; please make my paths straight. I have made plans, but I surrender them to You, because You direct my steps. You promised to instruct me and teach me the way I should go, and to guide me with Your eye upon me. Let Your Word be a lamp to my feet and a light to my path. When I turn to the right or the left, let me hear Your voice saying, this is the way. I ask You for wisdom, believing that You give generously and without reproach. Renew my mind so I can recognise Your good and perfect will. Let Your peace rule in my heart, and close the doors that are not from You. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'forgiveness',
+    title: 'Forgiveness',
+    icon: '🤍',
+    kind: 'devotional',
+    summary: 'Receiving God\'s forgiveness fully and extending it freely to others.',
+    sections: [
+      {
+        heading: 'Forgiven Completely',
+        refs: ['1 John 1:9', 'Psalms 103:10-12', 'Isaiah 1:18'],
+        text: 'When we confess our sins, God is faithful and just to forgive and cleanse us. He removes our transgressions as far as the east is from the west and makes scarlet stains white as snow.',
+      },
+      {
+        heading: 'No Condemnation',
+        refs: ['Romans 8:1', 'Micah 7:18-19', 'Psalms 32:1-2'],
+        text: 'In Christ there is no condemnation. God delights in mercy and casts our sins into the depths of the sea. The forgiven person is truly blessed.',
+      },
+      {
+        heading: 'Forgive as You Were Forgiven',
+        refs: ['Ephesians 4:31-32', 'Colossians 3:13', 'Matthew 6:14-15'],
+        text: 'Having received so much mercy, we are called to release others. Forgiveness is not pretending the wrong did not happen; it is handing the debt to God and choosing kindness instead of bitterness.',
+      },
+      {
+        heading: 'Seventy Times Seven',
+        refs: ['Matthew 18:21-22', 'Luke 23:34'],
+        text: 'Jesus calls us to forgive without keeping score, and He modelled it on the cross. Forgiveness is often a process we return to again and again with His help.',
+      },
+    ],
+    prayer: 'Merciful Father, I come to You honestly. I confess my sins, the things I have done and the good I have left undone. Thank You that You are faithful and just to forgive me and cleanse me from all unrighteousness. Thank You that You do not deal with me according to my sins, but remove them as far as the east is from the west. I receive Your forgiveness; I will not keep punishing myself for what You have washed away. There is now no condemnation for me in Christ Jesus. Lord, You also know the hurt others have caused me. I do not pretend it did not matter, but I choose today to release those who wronged me into Your hands. Just as You forgave me in Christ, help me to forgive them. Remove bitterness, anger and resentment from my heart and replace them with kindness and tenderness. When the pain returns, help me to forgive again. Heal what was broken in me, and where it is wise, bring reconciliation. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'marriage',
+    title: 'Marriage',
+    icon: '💍',
+    kind: 'prayer',
+    summary: 'Praying for a marriage built on Christlike love, unity and faithfulness.',
+    sections: [
+      {
+        heading: 'Love That Lasts',
+        refs: ['1 Corinthians 13:4-7', 'Colossians 3:14'],
+        text: 'Love is patient and kind, keeps no record of wrongs, and bears, believes, hopes and endures all things. Above everything else, love binds us together in perfect unity.',
+      },
+      {
+        heading: 'One in Christ',
+        refs: ['Genesis 2:24', 'Ecclesiastes 4:9-12', 'Mark 10:9'],
+        text: 'Marriage joins two lives into one. A cord of three strands, with God at the centre, is not quickly broken, and what God has joined together is worth protecting.',
+      },
+      {
+        heading: 'Serving One Another',
+        refs: ['Ephesians 5:25', 'Ephesians 5:33', 'Philippians 2:3-4', 'Ephesians 4:2-3'],
+        text: 'Christ\'s self-giving love is the pattern for husband and wife. Humility, gentleness, patience and putting the other first keep the bond of peace strong.',
+      },
+    ],
+    prayer: 'Lord, thank You for the gift of marriage and for my spouse. I place our marriage in Your hands and ask You to be the third strand at the centre of our union. Teach us to love as You love: patient and kind, not proud or easily angered, keeping no record of wrongs. Help us to bear with one another, believe the best, hope together and endure through every season. Where there is distance, draw us close. Where there is hurt, bring honest conversation, humble apology and real forgiveness. Help us to put on love above all else, which binds everything together in harmony. Teach me to serve rather than to be served, to look to my spouse\'s interests and not only my own, and to show honour and respect. Guard our marriage from temptation, bitterness and anything that would divide what You have joined together. Fill our home with laughter, prayer and peace, and let our love point others to Christ. In Jesus\' name, Amen.',
+    declarations: [
+      'Our marriage is a threefold cord with Christ at the centre.',
+      'We love one another with patience and kindness.',
+      'We keep no record of wrongs and forgive as Christ forgave us.',
+      'What God has joined together, we will protect.',
+    ],
+  },
+  {
+    id: 'family-children',
+    title: 'Family & Children',
+    icon: '👨‍👩‍👧',
+    kind: 'prayer',
+    summary: 'Covering our homes and children with prayer and God\'s promises.',
+    sections: [
+      {
+        heading: 'As for Me and My House',
+        refs: ['Joshua 24:15', 'Psalms 127:1', 'Deuteronomy 6:6-7'],
+        text: 'A godly home is built by the Lord and shaped by daily faithfulness. Talking about God\'s ways at the table, on the road and at bedtime plants seeds that last.',
+      },
+      {
+        heading: 'Children Are a Gift',
+        refs: ['Psalms 127:3', 'Proverbs 22:6', 'Isaiah 54:13'],
+        text: 'Children are a heritage from the Lord. We train them in the way they should go and trust God\'s promise that they will be taught by Him and enjoy great peace.',
+      },
+      {
+        heading: 'Patient, Loving Parents',
+        refs: ['Ephesians 6:4', 'Colossians 3:21', 'Mark 10:14-16'],
+        text: 'Parents are called to nurture, not provoke or discourage. Jesus welcomed children into His arms and blessed them, showing us how precious they are to Him.',
+      },
+    ],
+    prayer: 'Father, I lift up my family to You. As for me and my house, we will serve the Lord. Unless You build our house, we labour in vain, so I invite You to build our home on Your love and truth. Thank You for my children; they are a gift and a heritage from You. I ask that they would be taught by You and that great would be their peace. Protect them in body, mind and spirit, and draw each one into a living relationship with Jesus. Give them friends who lead them well, and wisdom to choose what is right. Help me to train them in the way they should go with patience and consistency. Forgive me where I have been harsh or distracted, and help me not to provoke or discourage them, but to raise them in Your nurture. Let Your Word be spoken naturally in our home, at the table and at bedtime. Just as Jesus took children into His arms and blessed them, I place my children into Your arms today. In Jesus\' name, Amen.',
+    declarations: [
+      'As for me and my house, we will serve the Lord.',
+      'The Lord builds our home and watches over it.',
+      'My children are taught by the Lord, and great is their peace.',
+      'My children are a gift and a heritage from God.',
+    ],
+  },
+  {
+    id: 'salvation-assurance',
+    title: 'Salvation & Assurance',
+    icon: '✝️',
+    kind: 'devotional',
+    summary: 'Resting in the finished work of Christ and the security of God\'s love.',
+    sections: [
+      {
+        heading: 'God So Loved',
+        refs: ['John 3:16-17', 'Romans 5:8', 'Romans 6:23'],
+        text: 'Salvation starts with God\'s love, not our goodness. While we were still sinners Christ died for us, and eternal life is God\'s free gift to all who believe.',
+      },
+      {
+        heading: 'Saved by Grace Through Faith',
+        refs: ['Ephesians 2:8-9', 'Romans 10:9-10', 'Titus 3:5'],
+        text: 'We are saved by grace through faith, not by works. Believing in the heart that God raised Jesus from the dead and confessing Him as Lord brings salvation.',
+      },
+      {
+        heading: 'Secure in His Hand',
+        refs: ['John 10:28-29', 'Romans 8:38-39', '1 John 5:11-13'],
+        text: 'Nothing can snatch us out of the Father\'s hand or separate us from His love in Christ. God wants us to know, not merely hope, that we have eternal life.',
+      },
+    ],
+    prayer: 'Heavenly Father, thank You for loving the world so much that You gave Your only Son. Thank You that while I was still a sinner, Christ died for me. I cannot earn Your favour, and I do not need to. I am saved by grace through faith, and even that faith is Your gift. Today I confess with my mouth that Jesus is Lord, and I believe in my heart that You raised Him from the dead. Thank You that You saved me not because of my good works but because of Your mercy, washing and renewing me by Your Holy Spirit. When doubt whispers that I am not good enough, remind me that my security rests on Your promise and not my performance. No one can snatch me out of Your hand. Nothing in all creation, not death, not life, not my past or my future, can separate me from Your love in Christ Jesus. Help me to live with joy and confidence as Your child, knowing I have eternal life. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'thanksgiving-praise',
+    title: 'Thanksgiving & Praise',
+    icon: '🙌',
+    kind: 'devotional',
+    summary: 'Cultivating a grateful heart that praises God in every season.',
+    sections: [
+      {
+        heading: 'Enter with Thanksgiving',
+        refs: ['Psalms 100:1-5', 'Psalms 136:1'],
+        text: 'Thanksgiving is the doorway into God\'s presence. We praise Him because He made us, we belong to Him, and His love endures forever.',
+      },
+      {
+        heading: 'Give Thanks in Everything',
+        refs: ['1 Thessalonians 5:16-18', 'Colossians 3:17', 'Habakkuk 3:17-18'],
+        text: 'Gratitude is not reserved for easy days. Like Habakkuk, we can rejoice in the Lord even when the fields are bare, because our joy is anchored in who He is.',
+      },
+      {
+        heading: 'A Life of Praise',
+        refs: ['Psalms 34:1-3', 'Psalms 150:6', 'Hebrews 13:15'],
+        text: 'Praise can be continual, a sacrifice offered from our lips at all times. Everything that has breath is invited to praise the Lord.',
+      },
+    ],
+    prayer: 'Lord, I come into Your presence with thanksgiving and into Your courts with praise. You are good, and Your steadfast love endures forever. Thank You that You made me and that I belong to You; I am a sheep of Your pasture. Thank You for life and breath, for salvation in Jesus, for the people You have placed around me, and for the countless mercies I so easily overlook. I choose to rejoice always, to pray without ceasing, and to give thanks in every circumstance, because this is Your will for me in Christ. Even when the fig tree does not blossom and things are not as I hoped, I will rejoice in You, the God of my salvation. I will bless You at all times, and Your praise will continually be in my mouth. Let everything I do today, in word or deed, be done in the name of Jesus with thanks to You. Receive my praise as a sacrifice of love. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'grief-comfort',
+    title: 'Grief & Comfort',
+    icon: '🕯️',
+    kind: 'devotional',
+    summary: 'Finding God near in loss and holding on to the hope of resurrection.',
+    sections: [
+      {
+        heading: 'Near to the Brokenhearted',
+        refs: ['Psalms 34:18', 'Matthew 5:4', 'Psalms 147:3'],
+        text: 'God draws especially close to those who are crushed in spirit. Jesus called mourners blessed because they will be comforted, and the Lord binds up our wounds.',
+      },
+      {
+        heading: 'Jesus Wept',
+        refs: ['John 11:33-35', 'Isaiah 53:3'],
+        text: 'Jesus knew the resurrection was moments away, yet He still wept with His friends. Grief is not a lack of faith; it is love with nowhere to go, and our Saviour is acquainted with sorrow.',
+      },
+      {
+        heading: 'Comfort and Hope',
+        refs: ['2 Corinthians 1:3-4', '1 Thessalonians 4:13-14', 'Revelation 21:4'],
+        text: 'The God of all comfort meets us in our affliction. We grieve, but not without hope, because Jesus rose again and one day He will wipe away every tear.',
+      },
+    ],
+    prayer: 'God of all comfort, my heart is heavy and the loss feels too big to carry. Thank You that You are near to the brokenhearted and that You save those who are crushed in spirit. I do not have to pretend I am fine with You. Jesus, You wept at the grave of Your friend, and You understand sorrow and grief. Sit with me in this pain. Bind up my wounds and heal my broken heart in Your time and Your way. Comfort me in all my troubles, and in time let me comfort others with the comfort I receive from You. Thank You that I do not grieve as those who have no hope, because Jesus died and rose again. Hold the memories I treasure and help me with the regrets I carry. Give me grace for the hard days, the anniversaries and the quiet evenings. Thank You that a day is coming when You will wipe away every tear, and there will be no more death, mourning, crying or pain. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'favour-open-doors',
+    title: 'Favour & Open Doors',
+    icon: '🚪',
+    kind: 'prayer',
+    summary: 'Asking God for favour and wisdom to walk through the doors He opens.',
+    sections: [
+      {
+        heading: 'Surrounded with Favour',
+        refs: ['Psalms 5:12', 'Proverbs 3:3-4', 'Numbers 6:24-26'],
+        text: 'God blesses the righteous and surrounds them with favour like a shield. Loving-kindness and faithfulness bring favour with God and people, and His face shines on His children.',
+      },
+      {
+        heading: 'Doors Only God Can Open',
+        refs: ['Revelation 3:7-8', 'Isaiah 45:2-3', '1 Corinthians 16:9'],
+        text: 'Christ holds the key; what He opens no one can shut. He goes before us to level the way, and open doors often come together with real challenges.',
+      },
+      {
+        heading: 'Growing in Favour',
+        refs: ['Luke 2:52', 'Genesis 39:21-23', 'Proverbs 22:29'],
+        text: 'Jesus grew in favour with God and people. Joseph found favour even in prison as he served faithfully, and skilled, diligent work is noticed. Favour is often found on the path of faithfulness.',
+      },
+    ],
+    prayer: 'Gracious Father, I thank You that You bless the righteous and surround them with favour as with a shield. I am made righteous in Christ, so I ask for Your favour over my life today. The Lord bless me and keep me; make Your face shine on me and be gracious to me; lift up Your countenance on me and give me peace. Lord Jesus, You hold the key of David. What You open no one can shut, and what You shut no one can open. I ask You to open the doors that are part of Your plan for me, and to close every door that would lead me away from You. Go before me and make the crooked places straight. Like Joseph, let me find favour even in difficult places as I serve faithfully. Help me to grow in wisdom and in favour with You and with people. Keep mercy and truth bound around my neck, and make me skilled and diligent in my work. When You open a door, give me courage to walk through it. In Jesus\' name, Amen.',
+    declarations: [
+      'God surrounds me with favour as with a shield.',
+      'What the Lord opens for me, no one can shut.',
+      'The Lord goes before me and makes the crooked places straight.',
+      'I grow in wisdom and in favour with God and people.',
+    ],
+  },
+  {
+    id: 'wisdom',
+    title: 'Wisdom',
+    icon: '🦉',
+    kind: 'devotional',
+    summary: 'Seeking the wisdom that begins with reverence for God.',
+    sections: [
+      {
+        heading: 'The Beginning of Wisdom',
+        refs: ['Proverbs 9:10', 'Proverbs 2:6', 'Proverbs 4:7'],
+        text: 'Wisdom starts with knowing and honouring God. It is a gift He gives, and it is worth pursuing above all else.',
+      },
+      {
+        heading: 'Ask in Faith',
+        refs: ['James 1:5-6', '1 Kings 3:9-12'],
+        text: 'Solomon asked for an understanding heart, and God was pleased. Today God still gives wisdom generously, without finding fault, to all who ask in faith.',
+      },
+      {
+        heading: 'Wisdom from Above',
+        refs: ['James 3:17', 'Colossians 3:16', 'Psalms 90:12'],
+        text: 'Heavenly wisdom is pure, peaceable, gentle and full of mercy. It grows as the word of Christ dwells richly in us and as we learn to number our days.',
+      },
+    ],
+    prayer: 'Lord, I confess how often I lean on my own understanding. Today I ask You for wisdom. I want to begin where wisdom begins, with reverence for You and knowledge of the Holy One. Thank You that You give wisdom generously and do not scold me for asking. Like Solomon, I ask for an understanding heart, to discern between good and evil and to serve others well. Help me ask in faith, without doubting. Give me wisdom from above, which is pure, peace-loving, gentle, open to reason, full of mercy and good fruit, and sincere. Let the word of Christ dwell in me richly, shaping my thoughts and conversations. Teach me to number my days so that I gain a heart of wisdom and spend my time on what matters. Guard me from rash words and hasty decisions. In my work, my relationships, my money and my choices, let Your wisdom guide me. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'work-purpose',
+    title: 'Work & Purpose',
+    icon: '🛠️',
+    kind: 'devotional',
+    summary: 'Seeing daily work as worship and living out the purpose God gives.',
+    sections: [
+      {
+        heading: 'Created for Good Works',
+        refs: ['Ephesians 2:10', 'Jeremiah 29:11', 'Genesis 2:15'],
+        text: 'We are God\'s workmanship, created in Christ for good works He prepared in advance. From the garden onward, work has been part of His good design and His plans for us are for hope and a future.',
+      },
+      {
+        heading: 'Working as for the Lord',
+        refs: ['Colossians 3:23-24', '1 Corinthians 10:31', 'Proverbs 16:3'],
+        text: 'Whatever we do, we can do wholeheartedly as for the Lord. Committing our work to Him turns ordinary tasks into worship.',
+      },
+      {
+        heading: 'Gifts to Serve',
+        refs: ['1 Peter 4:10-11', 'Romans 12:6-8', 'Matthew 5:16'],
+        text: 'Each of us has received gifts to serve others as faithful stewards of God\'s grace. When our light shines through good work, people see it and glorify our Father.',
+      },
+    ],
+    prayer: 'Creator God, thank You that I am Your workmanship, created in Christ Jesus for good works You prepared beforehand. Thank You that You have plans for me, plans for a hope and a future. Help me see my daily work, whether at a desk, in a home, on a job site or in a classroom, as part of Your purpose. Today I commit my work to You; establish my plans. Help me to work heartily, as for You and not only for people, knowing that I serve the Lord Christ. Whether I eat, drink or work, let me do it all for Your glory. Show me the gifts You have given me and teach me to use them to serve others as a good steward of Your grace. Where I feel stuck or unseen, remind me that You see faithfulness. Let my attitude, integrity and kindness at work be a light so that others give glory to You. Give me rest from striving and joy in serving. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'faith',
+    title: 'Faith',
+    icon: '🌱',
+    kind: 'devotional',
+    summary: 'Growing a living faith that trusts God beyond what we can see.',
+    sections: [
+      {
+        heading: 'What Faith Is',
+        refs: ['Hebrews 11:1', 'Hebrews 11:6', '2 Corinthians 5:7'],
+        text: 'Faith is confident trust in what God has promised, even when it is unseen. It pleases God because it takes Him at His word, and it shapes how we walk each day.',
+      },
+      {
+        heading: 'How Faith Grows',
+        refs: ['Romans 10:17', 'Mark 9:23-24', 'Luke 17:5-6'],
+        text: 'Faith grows by hearing the word of Christ. Even small, struggling faith is welcome; like the father who cried, help my unbelief, we can bring Jesus what we have.',
+      },
+      {
+        heading: 'Faith That Endures',
+        refs: ['Romans 4:20-21', 'James 2:17', 'Hebrews 12:1-2'],
+        text: 'Abraham grew strong in faith, fully convinced that God could do what He promised. Living faith shows itself in action, and we run our race with our eyes fixed on Jesus.',
+      },
+    ],
+    prayer: 'Lord Jesus, You are the author and perfecter of my faith. I want to trust You more. Faith is the assurance of things hoped for and the conviction of things not seen, so help me to walk by faith and not by sight. I believe that You exist and that You reward those who seek You. Increase my faith as I hear and read Your Word. I confess that sometimes my faith feels small, so like the father in the Gospel I pray: I believe; help my unbelief. Thank You that even faith as small as a mustard seed is enough in Your hands. Like Abraham, let me grow strong in faith, giving glory to You, fully convinced that You are able to do what You have promised. Let my faith be alive, shown in love and obedience, not only in words. Help me lay aside every weight and the sin that clings so closely, and run with endurance, looking to You. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'patience-waiting',
+    title: 'Patience & Waiting on God',
+    icon: '⏳',
+    kind: 'devotional',
+    summary: 'Learning to trust God\'s timing in seasons of waiting.',
+    sections: [
+      {
+        heading: 'Wait for the Lord',
+        refs: ['Psalms 27:14', 'Psalms 37:7', 'Isaiah 40:31'],
+        text: 'Waiting on God is active trust, not idle resignation. We are told to be strong, take heart and rest in Him, and those who wait are renewed.',
+      },
+      {
+        heading: 'His Timing Is Good',
+        refs: ['Ecclesiastes 3:1', 'Habakkuk 2:3', '2 Peter 3:9'],
+        text: 'There is a season for everything. God\'s promises have an appointed time, and what looks like delay is often His patience and care at work.',
+      },
+      {
+        heading: 'Patience Produces Fruit',
+        refs: ['Romans 5:3-5', 'James 1:2-4', 'Galatians 6:9'],
+        text: 'Trials develop endurance, character and hope. Patience has a perfecting work in us, so we do not grow weary in doing good, for in due season we will reap.',
+      },
+    ],
+    prayer: 'Faithful God, I am in a season of waiting and I confess that it is hard. I want answers now, and I am tempted to grow anxious or to take matters into my own hands. Help me to wait for You, to be strong and let my heart take courage. Teach me to be still before You and wait patiently, without fretting over others who seem to be moving ahead. As I wait on You, renew my strength. Remind me that there is a time for everything under heaven, and that Your vision has an appointed time; though it seems to linger, it will surely come. Thank You that Your timing flows from love and patience, not neglect. Use this waiting to produce endurance, character and hope in me. Let patience have its perfect work so that I lack nothing. Keep me from growing weary in doing good, and help me trust that in due season I will reap. In Jesus\' name, Amen.',
+  },
+  {
+    id: 'deliverance-addiction',
+    title: 'Deliverance from Addiction',
+    icon: '⛓️',
+    kind: 'prayer',
+    summary: 'Seeking freedom, healing and new life in Christ from every bondage.',
+    sections: [
+      {
+        heading: 'Set Free by the Son',
+        refs: ['John 8:36', 'Galatians 5:1', 'Luke 4:18'],
+        text: 'Jesus came to proclaim liberty to captives and set the oppressed free. Whom the Son sets free is free indeed, and we are called to stand firm and not return to the yoke of slavery.',
+      },
+      {
+        heading: 'A New Creation',
+        refs: ['2 Corinthians 5:17', 'Romans 6:6-7', 'Romans 6:14'],
+        text: 'In Christ the old has passed away and the new has come. Sin no longer has dominion over us because we live under grace. Our identity is not our addiction.',
+      },
+      {
+        heading: 'Walking in Freedom Daily',
+        refs: ['Galatians 5:16', 'Psalms 40:1-3', 'James 5:16'],
+        text: 'Freedom is walked out one step at a time by the Spirit, often with honest confession and the support of others. God lifts us out of the pit and sets our feet on a rock.',
+      },
+    ],
+    prayer: 'Lord Jesus, You came to proclaim freedom to captives, and I come to You needing that freedom. I confess my addiction honestly and without excuses. I have tried to break free in my own strength and I cannot do it alone. Thank You that whoever the Son sets free is free indeed. I ask You now to break every chain that holds me. Thank You that in You I am a new creation; the old has gone and the new has come. My old self was crucified with You, and sin will not have dominion over me, for I am under grace. Fill me with Your Holy Spirit so that I walk by the Spirit and do not gratify the desires of the flesh. Give me courage to confess to trusted people, to seek help, and to accept support. Heal the pain underneath the craving. Like the psalmist, lift me out of the miry pit, set my feet on a rock, and put a new song in my mouth. When I fall, help me get up quickly and run back to You. In Jesus\' name, Amen.',
+    declarations: [
+      'Whom the Son sets free is free indeed, and I am free in Christ.',
+      'I am a new creation; the old has passed away.',
+      'Sin shall not have dominion over me, for I am under grace.',
+      'I walk by the Spirit one day at a time.',
+      'God has lifted me out of the pit and set my feet on a rock.',
+    ],
+  },
+  {
+    id: 'overcoming-temptation',
+    title: 'Overcoming Temptation',
+    icon: '⚔️',
+    kind: 'prayer',
+    summary: 'Standing firm against temptation with God\'s way of escape and His Word.',
+    sections: [
+      {
+        heading: 'A Way of Escape',
+        refs: ['1 Corinthians 10:13', 'Hebrews 4:15-16'],
+        text: 'No temptation is unique to us, and God is faithful to provide a way out. Jesus was tempted in every way yet without sin, so we can approach His throne for help in our time of need.',
+      },
+      {
+        heading: 'Armed with the Word',
+        refs: ['Matthew 4:1-4', 'Psalms 119:9-11'],
+        text: 'Jesus answered every temptation with Scripture. Hiding God\'s Word in our hearts keeps our way pure.',
+      },
+      {
+        heading: 'Watch, Pray and Flee',
+        refs: ['Matthew 26:41', '2 Timothy 2:22', 'James 1:12-15'],
+        text: 'The spirit is willing but the flesh is weak, so we watch and pray. Sometimes the wisest response is to flee and pursue righteousness with others who love God.',
+      },
+    ],
+    prayer: 'Father, I am facing temptation and I need Your strength. Thank You that no temptation has overtaken me that is not common to people, and that You are faithful. You will not let me be tempted beyond what I can bear, and You will provide a way of escape. Open my eyes to see that way and give me the will to take it. Jesus, You were tempted in every way, yet without sin, and You sympathise with my weakness. I come boldly to Your throne of grace to receive mercy and help right now. Like You in the wilderness, let me answer the lies of temptation with the truth of God\'s Word. I hide Your Word in my heart so that I may not sin against You. Help me to watch and pray, because my spirit is willing but my flesh is weak. Give me wisdom to flee what drags me down and to pursue righteousness, faith, love and peace with others who call on You from a pure heart. In Jesus\' name, Amen.',
+    declarations: [
+      'God is faithful and always provides me a way of escape.',
+      'I hide God\'s Word in my heart so that I might not sin against Him.',
+      'I come boldly to the throne of grace for help in my time of need.',
+      'I flee temptation and pursue righteousness, faith, love and peace.',
+    ],
+  },
+  {
+    id: 'morning-prayer',
+    title: 'Morning Prayer',
+    icon: '🌅',
+    kind: 'prayer',
+    summary: 'Beginning the day by offering it to God and receiving His new mercies.',
+    sections: [
+      {
+        heading: 'New Every Morning',
+        refs: ['Lamentations 3:22-23', 'Psalms 118:24'],
+        text: 'God\'s mercies are new every morning and His faithfulness is great. Each day is one the Lord has made, a fresh gift to rejoice in.',
+      },
+      {
+        heading: 'Seek Him Early',
+        refs: ['Psalms 5:3', 'Psalms 143:8', 'Mark 1:35'],
+        text: 'The psalmist lifted his requests in the morning and waited expectantly. Jesus Himself rose early to pray. Starting with God sets the direction for the whole day.',
+      },
+      {
+        heading: 'Offer the Day',
+        refs: ['Romans 12:1', 'Psalms 90:14', 'Psalms 19:14'],
+        text: 'We offer ourselves as living sacrifices and ask God to satisfy us early with His steadfast love, so that our words and thoughts please Him all day.',
+      },
+    ],
+    prayer: 'Good morning, Lord. This is the day that You have made, and I will rejoice and be glad in it. Thank You for the gift of waking up and for breath in my lungs. Your steadfast love never ceases and Your mercies never come to an end; they are new this morning, and great is Your faithfulness. In the morning You hear my voice, so I lay my requests before You and I will watch expectantly. Let me hear of Your unfailing love this morning, because I trust in You. Show me the way I should go, for I lift up my soul to You. Satisfy me early with Your steadfast love, so that I may rejoice and be glad all my days. I offer You my body, my time and my plans as a living sacrifice. Go before me into every meeting, conversation and task. Let the words of my mouth and the meditation of my heart be acceptable in Your sight, O Lord, my rock and my redeemer. In Jesus\' name, Amen.',
+    declarations: [
+      'This is the day the Lord has made; I will rejoice and be glad in it.',
+      'God\'s mercies are new for me this morning.',
+      'I offer this day to God as a living sacrifice.',
+      'The Lord goes before me into everything I do today.',
+    ],
+  },
+  {
+    id: 'night-prayer',
+    title: 'Night Prayer',
+    icon: '🌙',
+    kind: 'prayer',
+    summary: 'Ending the day in peace and resting under God\'s watchful care.',
+    sections: [
+      {
+        heading: 'Lie Down in Peace',
+        refs: ['Psalms 4:8', 'Psalms 3:5', 'Proverbs 3:24'],
+        text: 'We can lie down and sleep in peace because the Lord sustains us. Sleep becomes a quiet act of trust that God is in control while we rest.',
+      },
+      {
+        heading: 'He Never Sleeps',
+        refs: ['Psalms 121:3-4', 'Psalms 127:2'],
+        text: 'The One who keeps us neither slumbers nor sleeps. He gives sleep to those He loves, so we can release the striving of the day.',
+      },
+      {
+        heading: 'Release the Day',
+        refs: ['Psalms 139:11-12', 'Psalms 63:6-7', 'Ephesians 4:26'],
+        text: 'Darkness is not dark to God. As we remember Him on our beds, we can settle accounts with Him and others, and sing in the shadow of His wings.',
+      },
+    ],
+    prayer: 'Father, as this day comes to an end I bring it all back to You. Thank You for every good gift today, seen and unseen. Forgive me where I fell short in my words, my attitudes and my actions, and help me release any anger before I sleep. I lay down the conversations that troubled me, the unfinished tasks and the worries about tomorrow. You are the God who neither slumbers nor sleeps, so I do not need to stay awake carrying what only You can hold. You give sleep to those You love, and I receive it as a gift. In peace I will lie down and sleep, for You alone, Lord, make me dwell in safety. When I lie down, let me not be afraid, and let my sleep be sweet. Even the darkness is not dark to You; the night shines as the day. Watch over my home and the people I love. As I remember You on my bed, let me rest in the shadow of Your wings, and wake me sustained by You. In Jesus\' name, Amen.',
+    declarations: [
+      'I will lie down and sleep in peace, for the Lord makes me dwell in safety.',
+      'The One who keeps me never slumbers nor sleeps.',
+      'God gives sleep to those He loves.',
+      'I rest in the shadow of His wings tonight.',
+    ],
+  },
+  {
+    id: 'holy-spirit-prayer',
+    title: 'Holy Spirit & Prayer Life',
+    icon: '🔥',
+    kind: 'devotional',
+    summary: 'Depending on the Holy Spirit and growing in a living, daily prayer life.',
+    sections: [
+      {
+        heading: 'The Helper Has Come',
+        refs: ['John 14:16-17', 'John 14:26', 'Acts 1:8'],
+        text: 'Jesus promised the Holy Spirit as Helper, Teacher and the source of power to be His witnesses. He dwells with us and in us.',
+      },
+      {
+        heading: 'The Spirit Helps Us Pray',
+        refs: ['Romans 8:26-27', 'Jude 1:20', 'Ephesians 6:18'],
+        text: 'When we do not know what to pray, the Spirit intercedes for us. We build ourselves up by praying in the Spirit at all times with all kinds of prayers.',
+      },
+      {
+        heading: 'Ask, Seek, Knock',
+        refs: ['Luke 11:9-13', 'Matthew 6:6', 'Jeremiah 33:3'],
+        text: 'Prayer is a relationship with a Father who loves to give good gifts, especially the Holy Spirit. Time alone with Him in the secret place is never wasted.',
+      },
+      {
+        heading: 'Walk in the Spirit',
+        refs: ['Galatians 5:22-25', 'Ephesians 5:18'],
+        text: 'Being filled with the Spirit is a continual invitation. As we keep in step with Him, His fruit grows in our character day by day.',
+      },
+    ],
+    prayer: 'Holy Spirit, thank You that You are the Helper Jesus promised, living with me and in me. I welcome You afresh today. Teach me all things and remind me of the words of Jesus. Fill me again, and give me power to be a faithful witness in my home, my work and my community. I confess that my prayer life is often weak and distracted. Thank You that when I do not know what to pray, You intercede for me with groanings too deep for words. Teach me to pray at all times, building myself up in my most holy faith. Father, Jesus said that if earthly parents give good gifts, how much more will You give the Holy Spirit to those who ask. So I ask, I seek and I knock. Draw me into the secret place with You and answer me, showing me great and mighty things I do not know. Let Your fruit grow in me: love, joy, peace, patience, kindness, goodness, faithfulness, gentleness and self-control. Help me keep in step with You every day. In Jesus\' name, Amen.',
+  },
+];

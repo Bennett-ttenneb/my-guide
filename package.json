@@ -1,0 +1,27 @@
+{
+  "name": "morning-bible",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@dr.pogodin/react-native-fs": "^2.41.0",
+    "@pocketpalai/react-native-speech": "^2.8.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~58.0.23",
+    "expo-notifications": "~58.1.8",
+    "expo-speech": "~58.0.3",
+    "expo-status-bar": "~58.0.4",
+    "onnxruntime-react-native": "^1.24.3",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-web": "^0.21.4"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "postinstall": "node scripts/fix-onnxruntime.js"
+  },
+  "private": true
+}
