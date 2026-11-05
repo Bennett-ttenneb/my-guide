@@ -91,7 +91,7 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Row>
 
         <Text style={styles.section}>Natural AI voice</Text>
-        {aiState === 'unsupported' && <Text style={styles.muted}>Available in the phone app.</Text>}
+        {aiState === 'unsupported' && <Text style={styles.muted}>Coming in a later update. Reading uses the phone voice below for now.</Text>}
         {aiState === 'missing' && (
           <>
             <Text style={styles.muted}>A human-sounding voice that runs on your phone. One-time download of about 94 MB (use Wi-Fi), then it works offline. English Bibles only.</Text>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "My Guide",
     "slug": "morning-bible",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.morningbible.app",
-      "versionCode": 3
+      "versionCode": 4
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,9 +27,6 @@
       "eas": {
         "projectId": "432ffef5-f499-4840-a5d6-b18a3068d5b2"
       }
-    },
-    "plugins": [
-      "onnxruntime-react-native"
-    ]
+    }
   }
 }

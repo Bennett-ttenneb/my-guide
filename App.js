@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
 import { speakQueue, stopSpeaking } from './speaker';
+import * as AI from './aivoice';
 import { chapterName, currentStreak, dayKey, DEFAULT_PLAN, finishToday, planProgress, step, todaysReading, TOTAL_CHAPTERS } from './plan';
 import Devotions from './Devotions';
 import { TRANSLATIONS, getBible } from './bible';
@@ -104,7 +105,7 @@ export default function App() {
   // screen turning off), use the phone's voice.
   const voiceFor = (s, { overnight = false } = {}) => ({
     phoneVoice: s.voice,
-    aiVoice: !overnight && s.aiVoice && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
+    aiVoice: !overnight && AI.supported && s.aiVoice && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
   });
 
   // One verse per utterance: Android caps utterance length, and it lets the text follow along verse by verse.
