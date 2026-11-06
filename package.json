@@ -3,14 +3,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
+    "@dr.pogodin/react-native-fs": "^2.41.0",
+    "@kesha-antonov/react-native-background-downloader": "^4.7.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.23",
+    "expo-asset": "~58.0.20",
+    "expo-audio": "~58.0.11",
+    "expo-build-properties": "~58.0.12",
+    "expo-image-picker": "~58.0.10",
     "expo-notifications": "~58.1.8",
     "expo-speech": "~58.0.3",
     "expo-status-bar": "~58.0.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
+    "react-native-sherpa-onnx": "^0.4.4",
+    "react-native-svg": "15.16.0",
     "react-native-web": "^0.21.4"
   },
   "scripts": {

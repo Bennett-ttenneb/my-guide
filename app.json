@@ -2,7 +2,7 @@
   "expo": {
     "name": "My Guide",
     "slug": "morning-bible",
-    "version": "2.0.1",
+    "version": "2.1.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.morningbible.app",
-      "versionCode": 4
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,6 +27,32 @@
       "eas": {
         "projectId": "432ffef5-f499-4840-a5d6-b18a3068d5b2"
       }
-    }
+    },
+    "plugins": [
+      "@kesha-antonov/react-native-background-downloader",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow My Guide to record voice notes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow My Guide to add your photos to notes.",
+          "cameraPermission": "Allow My Guide to take photos for your notes."
+        }
+      ],
+      "expo-asset",
+      "./plugins/force-room",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "# WorkManager creates its Room database reflectively; R8 removed the constructor and 2.1.1 crashed on launch.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class androidx.work.impl.** { *; }"
+          }
+        }
+      ]
+    ]
   }
 }

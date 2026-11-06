@@ -91,10 +91,10 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Row>
 
         <Text style={styles.section}>Natural AI voice</Text>
-        {aiState === 'unsupported' && <Text style={styles.muted}>Coming in a later update. Reading uses the phone voice below for now.</Text>}
+        {aiState === 'unsupported' && <Text style={styles.muted}>Available in the phone app.</Text>}
         {aiState === 'missing' && (
           <>
-            <Text style={styles.muted}>A human-sounding voice that runs on your phone. One-time download of about 94 MB (use Wi-Fi), then it works offline. English Bibles only.</Text>
+            <Text style={styles.muted}>A human-sounding voice that runs on your phone. One-time download of about 98 MB (use Wi-Fi), then it works offline. English Bibles only.</Text>
             {aiError && <Text style={[styles.muted, { color: c.danger, marginTop: 6 }]}>{aiError}</Text>}
             <Pressable style={styles.button} onPress={download} accessibilityRole="button"><Text style={styles.buttonText}>Download natural voice</Text></Pressable>
           </>
@@ -141,7 +141,7 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Pressable>
 
         <Text style={styles.credit}>My Guide · made by BBotnics Industries</Text>
-        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voice: Kokoro-82M (Apache-2.0).</Text>
+        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voice: Kokoro-82M (Apache-2.0) via sherpa-onnx.</Text>
       </ScrollView>
     </Modal>
   );

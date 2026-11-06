@@ -15,6 +15,8 @@ import { COLORS } from './colors';
 import Navigator from './Navigator';
 import Settings from './Settings';
 import Notes, { NoteEditor } from './Notes';
+import RichNote, { isEmptyNote } from './RichNote';
+import { discard } from './attachments';
 
 const KEY = 'morning-bible';
 const START = {
@@ -52,6 +54,7 @@ export default function App() {
   const [tab, setTab] = useState('bible'); // 'bible' | 'notes'
   const [selected, setSelected] = useState(null); // verse index whose action sheet is open
   const [editing, setEditing] = useState(null); // { title, subtitle, initial, save(text), remove() }
+  const [rich, setRich] = useState(null); // note open in the notes editor, 'new', or null
   const [target, setTarget] = useState(0); // verse index to scroll to after navigating
   const list = useRef(null);
   const session = useRef(0); // bumps on every stop, so callbacks from an old reading are ignored
@@ -105,7 +108,7 @@ export default function App() {
   // screen turning off), use the phone's voice.
   const voiceFor = (s, { overnight = false } = {}) => ({
     phoneVoice: s.voice,
-    aiVoice: !overnight && AI.supported && s.aiVoice && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
+    aiVoice: !overnight && AI.supported && typeof s.aiVoice === 'number' && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
   });
 
   // One verse per utterance: Android caps utterance length, and it lets the text follow along verse by verse.
@@ -192,11 +195,26 @@ export default function App() {
       remove: () => setMark(key, { note: undefined }),
     });
   };
-  const editQuick = (note) => setEditing({
-    title: 'Quick note', initial: note.text,
-    save: (text) => update((s) => ({ quickNotes: text ? s.quickNotes.map((n) => (n.id === note.id ? { ...n, text, date: Date.now() } : n)) : s.quickNotes.filter((n) => n.id !== note.id) })),
-    remove: () => update((s) => ({ quickNotes: s.quickNotes.filter((n) => n.id !== note.id) })),
-  });
+  // Saving keeps the note (or drops it if left empty) and deletes files of attachments it no longer has.
+  // shortcut: a recording or photo added and removed again before saving leaves its file behind; fine at notes scale.
+  const saveNote = (saved) => {
+    const old = state.quickNotes.find((n) => n.id === saved.id);
+    const keepIt = !isEmptyNote(saved);
+    const uris = new Set(keepIt ? saved.blocks.map((b) => b.uri) : []);
+    discard((old?.blocks ?? []).filter((b) => b.uri && !uris.has(b.uri)));
+    if (!keepIt) discard(saved.blocks.filter((b) => b.uri));
+    const stored = { ...saved, blocks: saved.blocks.map(({ key, ...b }) => b) };
+    update((s) => ({
+      quickNotes: !keepIt ? s.quickNotes.filter((n) => n.id !== saved.id)
+        : old ? s.quickNotes.map((n) => (n.id === saved.id ? stored : n)) : [stored, ...s.quickNotes],
+    }));
+    setRich(null);
+  };
+  const deleteNote = (n) => {
+    discard(n.blocks.filter((b) => b.uri));
+    update((s) => ({ quickNotes: s.quickNotes.filter((q) => q.id !== n.id) }));
+    setRich(null);
+  };
   const sel = selected === null ? null : { i: selected, key: keyOf(selected), ref: refOf(selected), text: verses[selected] };
 
   return (
@@ -224,8 +242,8 @@ export default function App() {
         <Devotions bible={bible} speaking={speaking} onRead={readTexts} onStop={stop} onGo={go} />
       ) : tab === 'notes' ? (
         <Notes quickNotes={state.quickNotes} marks={marks} bible={bible} onGo={go}
-          onAdd={(text) => update((s) => ({ quickNotes: [{ id: Date.now(), text, date: Date.now() }, ...s.quickNotes] }))}
-          onEditQuick={editQuick}
+          onNew={() => setRich('new')}
+          onEditQuick={(n) => setRich(state.quickNotes.find((q) => q.id === n.id) ?? 'new')}
           onEditVerse={(key) => { const [b, ch, v] = key.split('.').map(Number); editVerseNote(key, refName({ book: b, chapter: ch, verse: v }), bible[b]?.[ch - 1]?.[v - 1]); }} />
       ) : (
         <>
@@ -328,6 +346,8 @@ export default function App() {
           )}
         </Pressable>
       </Modal>
+
+      {rich && <RichNote note={rich === 'new' ? null : rich} onSave={saveNote} onDelete={deleteNote} onClose={() => setRich(null)} />}
 
       <NoteEditor visible={!!editing} title={editing?.title} subtitle={editing?.subtitle} initial={editing?.initial}
         onSave={(text) => { editing.save(text); setEditing(null); }}

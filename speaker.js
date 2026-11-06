@@ -18,15 +18,21 @@ export function speakQueue(items, { phoneVoice, aiVoice, onEnd }) {
     return;
   }
   (async () => {
-    for (const { text, onStart, onDone } of items) {
-      if (run !== id) return;
-      onStart?.();
+    // Generate the next item while the current one plays, so verses follow each other without long gaps.
+    let next = items.length ? AI.prepare(items[0].text, aiVoice) : null;
+    for (let i = 0; i < items.length; i++) {
+      const { onStart, onDone } = items[i];
       try {
-        await AI.speak(text, aiVoice);
+        const file = await next;
+        if (run !== id) return;
+        next = i + 1 < items.length ? AI.prepare(items[i + 1].text, aiVoice) : null;
+        next?.catch(() => {}); // a failure is handled when it is awaited
+        onStart?.();
+        await AI.play(file);
       } catch (e) {
-        // AI voice failed (e.g. files removed): finish the rest with the phone voice.
+        // AI voice failed (e.g. model files removed): finish the rest with the phone voice.
         console.warn('AI voice failed, using phone voice', e);
-        if (run === id) speakQueue(items.slice(items.findIndex((it) => it.text === text)), { phoneVoice, onEnd });
+        if (run === id) speakQueue(items.slice(i), { phoneVoice, onEnd });
         return;
       }
       if (run !== id) return;
