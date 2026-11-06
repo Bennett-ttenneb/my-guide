@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from './theme';
 import * as Speech from 'expo-speech';
 import * as AI from './aivoice';
@@ -142,6 +142,13 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
 
         <Text style={styles.credit}>My Guide · made by BBotnics Industries</Text>
         <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voice: Kokoro-82M (Apache-2.0) via sherpa-onnx.</Text>
+        <View style={styles.legal}>
+          {[['Privacy policy', 'PRIVACY.md'], ['Terms of use', 'TERMS.md']].map(([label, file]) => (
+            <Pressable key={file} onPress={() => Linking.openURL(`https://github.com/Bennett-ttenneb/my-guide/blob/main/${file}`)} style={styles.linkBtn} accessibilityRole="link">
+              <Text style={[styles.linkText, { color: c.accent }]}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
       </ScrollView>
     </Modal>
   );
@@ -194,6 +201,7 @@ const makeStyles = (c) => StyleSheet.create({
   chipText: { fontSize: 14, color: c.text, fontWeight: '600' },
   chipTextOn: { color: '#fff' },
   linkBtn: { minHeight: 44, justifyContent: 'center' },
+  legal: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginTop: 8 },
   linkText: { color: c.danger, fontSize: 15, fontWeight: '600' },
   sheet: { flex: 1, backgroundColor: c.bg },
   body: { paddingTop: 64, paddingHorizontal: 20, paddingBottom: 48 },
