@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useTheme } from './theme';
 import * as Speech from 'expo-speech';
 import * as AI from './aivoice';
@@ -11,7 +11,7 @@ import { chapterName, dayKey, perDay, PLAN_ORDERS, planProgress, todaysReading, 
 const PRESETS = [['1 chapter a day', TOTAL_CHAPTERS], ['2 years', 730], ['1 year', 365], ['6 months', 182], ['90 days', 90], ['30 days', 30]];
 const THEMES = [['auto', 'Match phone'], ['light', 'Light'], ['dark', 'Dark']];
 
-export default function Settings({ visible, state, streak, voices, onChange, onStopReading, onClose }) {
+export default function Settings({ visible, state, streak, voices, onChange, onStopReading, onClose, onOpenPlan }) {
   const c = useTheme();
   const styles = useMemo(() => makeStyles(c), [c]);
   const [voicesOpen, setVoicesOpen] = useState(false);
@@ -66,9 +66,17 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
           </Text>
         </View>
 
+        <Row label="Your name">
+          <TextInput value={state.name ?? ''} onChangeText={(name) => onChange({ name })} placeholder="For your greeting" placeholderTextColor={c.muted}
+            style={styles.nameInput} autoCapitalize="words" maxLength={30} accessibilityLabel="Your name, used in the greeting" />
+        </Row>
+
         <Text style={styles.section}>Reading plan</Text>
+        <Pressable onPress={onOpenPlan} style={styles.planBtn} accessibilityRole="button">
+          <Text style={styles.planBtnText}>📅  Open plan: days, catch-up and progress</Text>
+        </Pressable>
         <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.round(planProgress(state) * 100)}%` }]} /></View>
-        <Text style={styles.muted}>{Math.round(planProgress(state) * 100)}% done · {perDay(state.plan)} chapter{perDay(state.plan) > 1 ? 's' : ''} a day · finish in {state.plan.days} days</Text>
+        <Text style={styles.muted}>{Math.round(planProgress(state) * 100)}% done · {perDay(state.plan) === 1 ? '1 chapter' : `about ${perDay(state.plan)} chapters`} a day · finish in {state.plan.days} days</Text>
         <Chips items={PRESETS} value={state.plan.days} onPick={(days) => onChange({ plan: { ...state.plan, days } })} />
         <Row label="Custom length">
           <Stepper value={`${state.plan.days} days`} onMinus={() => onChange({ plan: { ...state.plan, days: Math.max(7, state.plan.days - (state.plan.days > 100 ? 10 : 1)) } })}
@@ -187,6 +195,9 @@ function Stepper({ value, onMinus, onPlus }) {
 }
 
 const makeStyles = (c) => StyleSheet.create({
+  nameInput: { minWidth: 160, minHeight: 44, textAlign: 'right', fontSize: 17, color: c.text },
+  planBtn: { minHeight: 48, borderRadius: 12, backgroundColor: c.accentSoft, justifyContent: 'center', paddingHorizontal: 14, marginBottom: 6 },
+  planBtnText: { color: c.accent, fontSize: 16, fontWeight: '700' },
   section: { fontSize: 14, fontWeight: '700', color: c.muted, textTransform: 'uppercase', marginTop: 20, marginBottom: 8 },
   progressTrack: { height: 10, borderRadius: 5, backgroundColor: c.soft, overflow: 'hidden', marginBottom: 6 },
   progressFill: { height: 10, backgroundColor: c.accent },

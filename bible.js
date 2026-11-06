@@ -39,4 +39,9 @@ const LOAD = {
   tsn: () => require('./data/tsn.json'),
 };
 
-export const getBible = (id) => (LOAD[id] ?? LOAD.web)();
+// Versions the user imported (see bibleStore.js), held in memory once loaded.
+const imported = {};
+export const registerBible = (id, books) => { imported[id] = books; };
+export const unregisterBible = (id) => { delete imported[id]; };
+
+export const getBible = (id) => imported[id] ?? (LOAD[id] ?? LOAD.web)();

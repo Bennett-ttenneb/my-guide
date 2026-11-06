@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { FlatList, Modal, PanResponder, Pressable, Share, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, PanResponder, Pressable, Share, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { DARK, LIGHT, ThemeContext, useTheme } from './theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Speech from 'expo-speech';
 import { speakQueue, stopSpeaking } from './speaker';
 import * as AI from './aivoice';
-import { chapterName, currentStreak, dayKey, DEFAULT_PLAN, finishToday, planProgress, step, todaysReading, TOTAL_CHAPTERS } from './plan';
+import { chapterName, currentStreak, dayKey, DEFAULT_PLAN, finishToday, markThrough, planProgress, planStatus, step, todaysReading, TOTAL_CHAPTERS, daysDone } from './plan';
+import PlanView from './PlanView';
+import { loadImported, pickAndImport, removeImported } from './bibleStore';
 import Devotions from './Devotions';
 import { TRANSLATIONS, getBible } from './bible';
 import { refName, verseKey } from './nav';
@@ -22,7 +24,11 @@ const KEY = 'morning-bible';
 const START = {
   chapter: 0, streak: 0, best: 0, lastDay: null, hour: 7, voice: null, translation: 'web', pos: { book: 0, chapter: 1 }, fontSize: 19,
   bookmarks: [], marks: {}, history: [], quickNotes: [], plan: DEFAULT_PLAN, theme: 'auto', aiVoice: null,
+  name: '', imported: [], splitRatio: 0.55,
 };
+const translationOf = (s) => [...TRANSLATIONS, ...(s.imported ?? [])].find((t) => t.id === s.translation);
+const greetingFor = (name, hour = new Date().getHours()) =>
+  `${hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'}${name?.trim() ? `, ${name.trim()}` : ''}`;
 const SLEEP = [['15 minutes', 15], ['30 minutes', 30], ['1 hour', 60], ['2 hours', 120], ['All night (8 hours)', 480]];
 const WORDS_PER_MINUTE = 165; // rough speaking rate of phone voices, used to size the overnight queue
 const same = (a, b) => a.book === b.book && a.chapter === b.chapter;
@@ -55,6 +61,13 @@ export default function App() {
   const [selected, setSelected] = useState(null); // verse index whose action sheet is open
   const [editing, setEditing] = useState(null); // { title, subtitle, initial, save(text), remove() }
   const [rich, setRich] = useState(null); // note open in the notes editor, 'new', or null
+  const [importing, setImporting] = useState(false);
+  const { width, height } = useWindowDimensions();
+  // Tablets, and phones turned sideways, show the Bible and notes side by side.
+  const split = width >= 700 || (width > height && width >= 560);
+  const [ratio, setRatio] = useState(null); // live divider position while dragging
+  const dragStart = useRef(0.55);
+  const paneWidth = useRef(1);
   const [target, setTarget] = useState(0); // verse index to scroll to after navigating
   const list = useRef(null);
   const session = useRef(0); // bumps on every stop, so callbacks from an old reading are ignored
@@ -64,8 +77,15 @@ export default function App() {
   const update = (patch) => setState((s) => persist({ ...s, ...(typeof patch === 'function' ? patch(s) : patch) }));
 
   useEffect(() => {
-    AsyncStorage.getItem(KEY).then((raw) => {
-      const loaded = raw ? { ...START, ...JSON.parse(raw) } : START;
+    AsyncStorage.getItem(KEY).then(async (raw) => {
+      let loaded = raw ? { ...START, ...JSON.parse(raw) } : START;
+      if (!loaded.plan.start) {
+        // Plans from before 2.3 had no start date: count the days already read as on schedule.
+        const start = new Date();
+        start.setDate(start.getDate() - daysDone(loaded.plan, loaded.chapter) + (loaded.lastDay === dayKey() ? 1 : 0));
+        loaded = persist({ ...loaded, plan: { ...loaded.plan, start: dayKey(start) } });
+      }
+      if (loaded.translation.startsWith('imp-') && !(await loadImported(loaded.translation))) loaded = { ...loaded, translation: 'web' };
       if (loaded.lastDay === dayKey()) return setState(loaded);
       // Opening the app before today's reading is done goes straight to it and starts reading.
       const today = todaysReading(loaded);
@@ -82,14 +102,17 @@ export default function App() {
     if (state) scheduleMorning(state.hour);
   }, [state?.hour]);
 
+  // Verses in the chapter on screen; scrolling past them throws (reading can run a verse ahead of a page turn).
+  const shownVerses = () => (state ? getBible(state.translation)[state.pos.book]?.[state.pos.chapter - 1]?.length ?? 0 : 0);
+
   useEffect(() => {
     if (!state) return;
-    if (target > 0) list.current?.scrollToIndex({ index: target, viewPosition: 0.2 });
+    if (target > 0 && target < shownVerses()) list.current?.scrollToIndex({ index: target, viewPosition: 0.2 });
     else list.current?.scrollToOffset({ offset: 0, animated: false });
   }, [state?.pos, state?.translation]);
 
   useEffect(() => {
-    if (speakingVerse > 0) list.current?.scrollToIndex({ index: speakingVerse, viewPosition: 0.3 });
+    if (speakingVerse > 0 && speakingVerse < shownVerses()) list.current?.scrollToIndex({ index: speakingVerse, viewPosition: 0.3 });
   }, [speakingVerse]);
 
   // Swipe left/right across the text for next/previous chapter; vertical drags stay with the scroll view.
@@ -98,6 +121,17 @@ export default function App() {
     onPanResponderRelease: (_, g) => { if (Math.abs(g.dx) > 80) swipe.current(g.dx < 0 ? 1 : -1); },
   }), []);
 
+  const ratioRef = useRef(0.55);
+  const divider = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => { dragStart.current = ratioRef.current; },
+    onPanResponderMove: (_, g) => setRatio(Math.min(0.75, Math.max(0.3, dragStart.current + g.dx / paneWidth.current))),
+    onPanResponderRelease: (_, g) => {
+      const r = Math.min(0.75, Math.max(0.3, dragStart.current + g.dx / paneWidth.current));
+      setRatio(null);
+      update({ splitRatio: r });
+    },
+  }), []);
   function stop() {
     session.current++;
     stopSpeaking();
@@ -108,7 +142,7 @@ export default function App() {
   // screen turning off), use the phone's voice.
   const voiceFor = (s, { overnight = false } = {}) => ({
     phoneVoice: s.voice,
-    aiVoice: !overnight && AI.supported && AI.isAiVoice(s.aiVoice) && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
+    aiVoice: !overnight && AI.supported && AI.isAiVoice(s.aiVoice) && translationOf(s)?.lang === 'en' ? s.aiVoice : null,
   });
 
   // One verse per utterance: Android caps utterance length, and it lets the text follow along verse by verse.
@@ -210,57 +244,73 @@ export default function App() {
     }));
     setRich(null);
   };
+  // Rotating the phone moves the editor between full screen and split view; keep what was typed.
+  const autosaveNote = (saved) => {
+    if (isEmptyNote(saved)) return;
+    const stored = { ...saved, blocks: saved.blocks.map(({ key, ...b }) => b) };
+    update((s) => ({ quickNotes: s.quickNotes.some((n) => n.id === saved.id) ? s.quickNotes.map((n) => (n.id === saved.id ? stored : n)) : [stored, ...s.quickNotes] }));
+    setRich(stored);
+  };
+  const openVerse = (r) => go({ book: r.book, chapter: r.chapter }, Math.max((r.verse || 1) - 1, 0));
+
+  async function importBible() {
+    setSheet(null);
+    setImporting(true);
+    try {
+      const t = await pickAndImport();
+      if (!t) return;
+      update((s) => ({ imported: [...s.imported, t], translation: t.id }));
+      setTarget(0);
+      Alert.alert('Bible imported', `${t.name} (${t.short}) is now in your translation list.`);
+    } catch (e) {
+      Alert.alert('Could not import this file', String(e?.message ?? e));
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  function removeBible(t) {
+    Alert.alert(`Remove ${t.short}?`, `${t.name} will be deleted from this phone. You can import the file again later.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: async () => {
+        await removeImported(t.id);
+        update((s) => ({ imported: s.imported.filter((x) => x.id !== t.id), translation: s.translation === t.id ? 'web' : s.translation }));
+      } },
+    ]);
+  }
+
   const deleteNote = (n) => {
     discard(n.blocks.filter((b) => b.uri));
     update((s) => ({ quickNotes: s.quickNotes.filter((q) => q.id !== n.id) }));
     setRich(null);
   };
   const sel = selected === null ? null : { i: selected, key: keyOf(selected), ref: refOf(selected), text: verses[selected] };
+  const status = planStatus(state);
+  ratioRef.current = state.splitRatio ?? 0.55;
+  const shown = ratio ?? ratioRef.current;
 
-  return (
-    <ThemeContext.Provider value={c}>
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.brand}>My Guide</Text>
-          <Text style={styles.byline}>by BBotnics Industries</Text>
-        </View>
-        <Pressable onPress={() => setSheet('settings')} style={styles.chip} accessibilityRole="button" accessibilityLabel={`Streak ${streak} days. Open settings`}>
-          <Text style={styles.chipText}>🔥 {streak}   ⚙</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.tabs}>
-        {[['bible', 'Bible'], ['devotions', 'Devotions'], ['notes', 'Notes']].map(([id, label]) => (
-          <Pressable key={id} onPress={() => setTab(id)} style={[styles.tab, tab === id && styles.tabOn]} accessibilityRole="tab" accessibilityState={{ selected: tab === id }}>
-            <Text style={[styles.tabText, tab === id && styles.tabTextOn]}>{label}</Text>
-          </Pressable>
-        ))}
-      </View>
-
-      {tab === 'devotions' ? (
-        <Devotions bible={bible} speaking={speaking} onRead={readTexts} onStop={stop} onGo={go} />
-      ) : tab === 'notes' ? (
-        <Notes quickNotes={state.quickNotes} marks={marks} bible={bible} onGo={go}
+  const notesList = (
+    <Notes quickNotes={state.quickNotes} marks={marks} bible={bible} onGo={go}
           onNew={() => setRich('new')}
           onEditQuick={(n) => setRich(state.quickNotes.find((q) => q.id === n.id) ?? 'new')}
           onEditVerse={(key) => { const [b, ch, v] = key.split('.').map(Number); editVerseNote(key, refName({ book: b, chapter: ch, verse: v }), bible[b]?.[ch - 1]?.[v - 1]); }} />
-      ) : (
-        <>
+  );
+  const bibleView = (
+    <>
           <View style={styles.toolbar}>
             <Pressable style={[styles.pill, { flex: 1 }]} onPress={() => setSheet('nav')} accessibilityRole="button" accessibilityLabel={`${chapterName(pos)}. Navigate`}>
               <Text style={styles.pillText}>{chapterName(pos)} ▾</Text>
             </Pressable>
             <Pressable style={styles.pill} onPress={() => setSheet('translation')} accessibilityRole="button" accessibilityLabel="Choose translation">
-              <Text style={styles.pillText}>{TRANSLATIONS.find((t) => t.id === state.translation)?.short ?? 'WEB'} ▾</Text>
+              <Text style={styles.pillText}>{translationOf(state)?.short ?? 'WEB'} ▾</Text>
             </Pressable>
           </View>
 
-          {!doneToday && (
+          {(!doneToday || status.behind > 0) && (
             <View style={styles.banner}>
               <Pressable style={{ flex: 1 }} onPress={() => go(today[0])} accessibilityRole="button" accessibilityLabel={`Open today's reading, ${todayLabel}`}>
                 <Text style={styles.bannerText}>Today: {todayLabel}</Text>
-                <Text style={styles.bannerSub}>{Math.round(planProgress(state) * 100)}% of your plan done</Text>
+                <Text style={styles.bannerSub}>Day {Math.min(status.day, status.total)} of {status.total}{status.behind ? ` · ${status.behind} behind` : ''} · {Math.round(planProgress(state) * 100)}% done</Text>
               </Pressable>
               <Pressable style={styles.bannerBtn} accessibilityRole="button" accessibilityLabel="Listen to today's reading"
                 onPress={() => { go(today[0]); read({ ...state, pos: today[0] }, { chapters: today }); }}>
@@ -268,6 +318,9 @@ export default function App() {
               </Pressable>
               <Pressable style={styles.bannerBtn} accessibilityRole="button" accessibilityLabel="Mark today's reading as read" onPress={() => update(finishToday)}>
                 <Text style={styles.bannerBtnText}>✓</Text>
+              </Pressable>
+              <Pressable style={styles.bannerBtn} accessibilityRole="button" accessibilityLabel="Open reading plan" onPress={() => setSheet('plan')}>
+                <Text style={styles.bannerBtnText}>📅</Text>
               </Pressable>
             </View>
           )}
@@ -281,7 +334,7 @@ export default function App() {
               contentContainerStyle={styles.reader}
               onScrollToIndexFailed={({ index, averageItemLength }) => {
                 list.current?.scrollToOffset({ offset: index * averageItemLength, animated: false });
-                setTimeout(() => list.current?.scrollToIndex({ index, viewPosition: 0.3 }), 100);
+                setTimeout(() => { if (index < shownVerses()) list.current?.scrollToIndex({ index, viewPosition: 0.3 }); }, 100);
               }}
               ListFooterComponent={
                 <Pressable onPress={() => go(step(pos, 1))} style={styles.nextChapter} accessibilityRole="button">
@@ -320,7 +373,44 @@ export default function App() {
             </Pressable>
           </View>
         </>
-      )}
+  );
+  const left = tab === 'devotions'
+    ? <Devotions bible={bible} speaking={speaking} onRead={readTexts} onStop={stop} onGo={go} />
+    : tab === 'notes' && !split ? notesList : bibleView;
+  const notesPane = rich
+    ? <RichNote key={rich === 'new' ? 'new' : `${rich.id}-${rich.updated}`} inline note={rich === 'new' ? null : rich} bible={bible} onSave={saveNote} onDelete={deleteNote} onOpenVerse={openVerse} onVerseHeard={openVerse} onAutosave={autosaveNote} />
+    : notesList;
+
+  return (
+    <ThemeContext.Provider value={c}>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.brand}>{greetingFor(state.name)}</Text>
+          <Text style={styles.byline}>My Guide · by BBotnics Industries</Text>
+        </View>
+        <Pressable onPress={() => setSheet('settings')} style={styles.chip} accessibilityRole="button" accessibilityLabel={`Streak ${streak} days. Open settings`}>
+          <Text style={styles.chipText}>🔥 {streak}   ⚙</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.tabs}>
+        {[['bible', 'Bible'], ['devotions', 'Devotions'], ...(split ? [] : [['notes', 'Notes']])].map(([id, label]) => (
+          <Pressable key={id} onPress={() => setTab(id)} style={[styles.tab, tab === id && styles.tabOn]} accessibilityRole="tab" accessibilityState={{ selected: tab === id }}>
+            <Text style={[styles.tabText, tab === id && styles.tabTextOn]}>{label}</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {split ? (
+        <View style={styles.split} onLayout={(e) => { paneWidth.current = e.nativeEvent.layout.width; }}>
+          <View style={{ flex: shown }}>{left}</View>
+          <View {...divider.panHandlers} style={styles.divider} accessibilityLabel="Drag to resize" accessibilityRole="adjustable">
+            <View style={styles.grip} />
+          </View>
+          <View style={{ flex: 1 - shown }}>{notesPane}</View>
+        </View>
+      ) : left}
 
       {/* Verse actions: highlight, note, bookmark, read from here, share */}
       <Modal visible={!!sel} transparent animationType="fade" onRequestClose={() => setSelected(null)}>
@@ -341,13 +431,13 @@ export default function App() {
               <ActionRow icon="📝" label={marks[sel.key]?.note ? 'Edit note' : 'Add note'} onPress={() => { setSelected(null); editVerseNote(sel.key, sel.ref, sel.text); }} />
               <ActionRow icon="🔖" label={bookmarks.includes(sel.key) ? 'Remove bookmark' : 'Bookmark'} onPress={() => { toggleBookmark(sel.key); setSelected(null); }} />
               <ActionRow icon="▶" label="Read aloud from here" onPress={() => { setSelected(null); read(state, sel.i); }} />
-              <ActionRow icon="↗" label="Share verse" onPress={() => { setSelected(null); Share.share({ message: `${sel.text}\n— ${sel.ref} (${TRANSLATIONS.find((t) => t.id === state.translation)?.short})` }); }} />
+              <ActionRow icon="↗" label="Share verse" onPress={() => { setSelected(null); Share.share({ message: `${sel.text}\n— ${sel.ref} (${translationOf(state)?.short})` }); }} />
             </Pressable>
           )}
         </Pressable>
       </Modal>
 
-      {rich && <RichNote note={rich === 'new' ? null : rich} onSave={saveNote} onDelete={deleteNote} onClose={() => setRich(null)} />}
+      {rich && !split && <RichNote key={rich === 'new' ? 'new' : `${rich.id}-${rich.updated}`} note={rich === 'new' ? null : rich} bible={bible} onSave={saveNote} onDelete={deleteNote} onOpenVerse={openVerse} onAutosave={autosaveNote} />}
 
       <NoteEditor visible={!!editing} title={editing?.title} subtitle={editing?.subtitle} initial={editing?.initial}
         onSave={(text) => { editing.save(text); setEditing(null); }}
@@ -361,21 +451,38 @@ export default function App() {
         <Pressable style={styles.backdrop} onPress={() => setSheet(null)}>
           <View style={styles.menu}>
             <Text style={styles.menuTitle}>Translation</Text>
-            <FlatList data={TRANSLATIONS} keyExtractor={(t) => t.id} style={{ maxHeight: 480 }} renderItem={({ item: t }) => (
-              <Pressable style={styles.menuRow} accessibilityRole="button"
+            <FlatList data={[...TRANSLATIONS, ...state.imported]} keyExtractor={(t) => t.id} style={{ maxHeight: 440 }} renderItem={({ item: t }) => (
+              <Pressable style={styles.menuRow} accessibilityRole="button" onLongPress={t.id.startsWith('imp-') ? () => removeBible(t) : undefined}
                 onPress={() => { stop(); setSheet(null); setTarget(0); update({ translation: t.id }); }}>
                 <Text style={[styles.menuText, t.id === state.translation && styles.menuCurrent]}>
                   {t.id === state.translation ? '✓ ' : ''}{t.short} · {t.name}
                 </Text>
-                {t.copyright !== 'Public domain' && <Text style={styles.menuSub}>{t.copyright}</Text>}
+                {t.copyright !== 'Public domain' && <Text style={styles.menuSub}>{t.copyright}{t.id.startsWith('imp-') ? ' · long-press to remove' : ''}</Text>}
               </Pressable>
             )} />
+            <Pressable style={[styles.menuRow, { borderBottomWidth: 0 }]} onPress={importBible} accessibilityRole="button">
+              <Text style={[styles.menuText, styles.menuCurrent]}>＋ Import a Bible file…</Text>
+              <Text style={styles.menuSub}>OSIS, USFX or Zefania XML, MySword or e-Sword</Text>
+            </Pressable>
           </View>
         </Pressable>
       </Modal>
 
       <Settings visible={sheet === 'settings'} state={state} streak={streak} voices={voices}
-        onChange={update} onStopReading={stop} onClose={() => setSheet(null)} />
+        onChange={update} onStopReading={stop} onClose={() => setSheet(null)} onOpenPlan={() => setSheet('plan')} />
+      <PlanView visible={sheet === 'plan'} state={state} onClose={() => setSheet(null)}
+        onMark={(n) => update((s) => markThrough(s, n))}
+        onOpen={(p) => p && go(p)}
+        onListen={(chapters) => { setSheet(null); go(chapters[0]); read({ ...state, pos: chapters[0] }, { chapters }); }}
+        onYear={() => update((s) => ({ plan: { ...s.plan, days: 365 } }))} />
+      <Modal visible={importing} transparent animationType="fade">
+        <View style={styles.backdrop}>
+          <View style={[styles.menu, { alignItems: 'center', gap: 12 }]}>
+            <ActivityIndicator size="large" color={c.accent} />
+            <Text style={styles.menuText}>Importing Bible…</Text>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={sheet === 'sleep'} transparent animationType="fade" onRequestClose={() => setSheet(null)}>
         <Pressable style={styles.backdrop} onPress={() => setSheet(null)}>
           <View style={styles.menu}>
@@ -408,6 +515,9 @@ function ActionRow({ icon, label, onPress }) {
 }
 
 const makeStyles = (c) => StyleSheet.create({
+  split: { flex: 1, flexDirection: 'row' },
+  divider: { width: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: c.bg },
+  grip: { width: 5, height: 56, borderRadius: 3, backgroundColor: c.border },
   container: { flex: 1, backgroundColor: c.bg, paddingTop: 52 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginBottom: 10 },
   brand: { fontSize: 20, fontWeight: '800', color: c.text },

@@ -49,7 +49,7 @@ export function finishToday(state, today = new Date()) {
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
   const streak = state.lastDay === dayKey(yesterday) ? state.streak + 1 : 1;
-  return { ...state, lastDay: key, streak, best: Math.max(state.best, streak), chapter: state.chapter + perDay(state.plan) };
+  return { ...state, lastDay: key, streak, best: Math.max(state.best, streak), chapter: dayEnd(state.plan, daysDone(state.plan, state.chapter) + 1) };
 }
 
 // Streak to show: a missed day means it is already broken.
@@ -64,16 +64,62 @@ export const DEFAULT_PLAN = { days: TOTAL_CHAPTERS, order: 'canon' };
 export const PLAN_ORDERS = { canon: 'Genesis to Revelation', nt: 'New Testament first' };
 const NT_START = BOOKS.slice(0, 39).reduce((n, [, c]) => n + c, 0);
 
-export const perDay = (plan = DEFAULT_PLAN) => Math.ceil(TOTAL_CHAPTERS / plan.days);
+// Chapters are spread evenly: a 365-day plan reads 3 or 4 a day and really ends on day 365.
+const planDays = (plan = DEFAULT_PLAN) => Math.min(plan.days, TOTAL_CHAPTERS);
+export const dayEnd = (plan, n) => Math.min(TOTAL_CHAPTERS, Math.floor((Math.max(n, 0) * TOTAL_CHAPTERS) / planDays(plan))); // chapters read by the end of day n
+// Whole plan days covered by the first `chapter` chapters.
+export function daysDone(plan, chapter) {
+  let n = Math.floor((chapter * planDays(plan)) / TOTAL_CHAPTERS);
+  while (n < planDays(plan) && dayEnd(plan, n + 1) <= chapter) n++;
+  while (n > 0 && dayEnd(plan, n) > chapter) n--;
+  return n;
+}
+// Average chapters a day, for display ("3.3").
+export const perDay = (plan = DEFAULT_PLAN) => Math.round((TOTAL_CHAPTERS / planDays(plan)) * 10) / 10;
 
 // The n-th chapter of the plan, as { book, chapter }.
 export const planChapter = (plan = DEFAULT_PLAN, n) => chapterAt(plan.order === 'nt' ? n + NT_START : n);
 
 // Today's chapters (state.chapter counts chapters of the plan already finished).
 export const todaysReading = (state) => {
-  const done = state.lastDay === dayKey();
-  const start = done ? state.chapter - perDay(state.plan) : state.chapter;
-  return Array.from({ length: perDay(state.plan) }, (_, i) => planChapter(state.plan, start + i));
+  const done = daysDone(state.plan, state.chapter);
+  const day = state.lastDay === dayKey() ? Math.max(done, 1) : done + 1;
+  return dayChapters(state.plan, Math.min(day, planDays(state.plan)));
 };
 
 export const planProgress = (state) => Math.min(state.chapter / TOTAL_CHAPTERS, 1);
+
+// Whole days between two YYYY-MM-DD keys.
+export const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+
+// Where the plan stands today: day number (1 = start day), days completed, and days behind schedule.
+export function planStatus(state, today = new Date()) {
+  const completed = daysDone(state.plan, state.chapter);
+  const day = daysBetween(state.plan?.start ?? dayKey(today), dayKey(today)) + 1;
+  const doneToday = state.lastDay === dayKey(today);
+  const total = planDays(state.plan);
+  return { day, completed, total, behind: Math.max(0, Math.min(doneToday ? day : day - 1, total) - completed) };
+}
+
+// The chapters of plan day n (1-based).
+export function dayChapters(plan, n) {
+  const first = dayEnd(plan, n - 1);
+  return Array.from({ length: Math.max(0, dayEnd(plan, n) - first) }, (_, i) => planChapter(plan, first + i));
+}
+
+// Marks plan days 1..n as read (or unmarks down to n). Reaching today's day counts for the streak.
+export function markThrough(state, n, today = new Date()) {
+  const { day } = planStatus(state, today);
+  const next = { ...state, chapter: dayEnd(state.plan, n) };
+  const key = dayKey(today);
+  if (n >= day && state.lastDay !== key) {
+    const streak = currentStreak(state, today) + 1;
+    return { ...next, lastDay: key, streak, best: Math.max(state.best, streak) };
+  }
+  if (n < day && state.lastDay === key) {
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    return { ...next, lastDay: state.streak > 1 ? dayKey(yesterday) : null, streak: Math.max(state.streak - 1, 0) };
+  }
+  return next;
+}

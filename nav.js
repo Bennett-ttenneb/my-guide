@@ -69,3 +69,7 @@ export const parseKey = (key) => {
   return { book, chapter, verse };
 };
 export const refName = ({ book, chapter, verse }) => `${BOOKS[book][0]} ${chapter}${verse ? `:${verse}` : ''}`;
+
+// Label and text for a linked verse or range in a note ({ book, chapter, verse, to }; verse 0 = whole chapter).
+export const verseLabel = (b) => `${refName(b)}${b.to > b.verse ? `-${b.to}` : ''}`;
+export const verseText = (bible, b) => (b.verse ? rangeText(bible, b) : (bible[b.book]?.[b.chapter - 1] ?? []).filter(Boolean).slice(0, 3)).join(' ');

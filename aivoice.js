@@ -3,8 +3,7 @@
 // (Kokoro sounded better but generated speech 4x slower than real time on a Dimensity 1080 phone,
 // leaving 15–25 s silences between verses, so 2.1.3 moved to Piper.)
 import { Platform } from 'react-native';
-
-const RELEASE = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models';
+import { downloadModel, isModelReady, modelDir } from './models';
 
 // sherpa-onnx tts-models release ids (int8 medium: fast and small).
 export const AI_VOICES = [
@@ -23,14 +22,8 @@ export const supported = Platform.OS === 'android' || Platform.OS === 'ios';
 
 // Native modules are only required when used, so the web preview keeps working.
 const ttsLib = () => require('react-native-sherpa-onnx/tts');
-const extraction = () => require('react-native-sherpa-onnx/extraction');
 const fs = () => require('@dr.pogodin/react-native-fs');
 const audio = () => require('expo-audio');
-
-const voicesDir = () => `${fs().DocumentDirectoryPath}/voices`;
-const voiceDir = (id) => `${voicesDir()}/${id}`;
-// Written last, so a half-finished download or unpack never counts as installed.
-const readyMark = (id) => `${voiceDir(id)}/.ready`;
 
 // Ids of the voices already downloaded. Also deletes the 98 MB Kokoro model left by 2.1.2/2.1.3.
 export async function installedVoices() {
@@ -38,34 +31,11 @@ export async function installedVoices() {
   const RNFS = fs();
   const old = `${RNFS.DocumentDirectoryPath}/sherpa-onnx`;
   if (await RNFS.exists(old)) await RNFS.unlink(old).catch(() => {});
-  const ok = await Promise.all(AI_VOICES.map(([id]) => RNFS.exists(readyMark(id)).catch(() => false)));
+  const ok = await Promise.all(AI_VOICES.map(([id]) => isModelReady('voices', id)));
   return AI_VOICES.filter((_, i) => ok[i]).map(([id]) => id);
 }
 
-// Downloads one voice archive straight from the sherpa-onnx GitHub release and unpacks it.
-// onProgress(0..1): download is the first 90%, unpacking the rest. Throws with a readable message.
-export async function install(id, onProgress) {
-  const RNFS = fs();
-  await RNFS.mkdir(voicesDir());
-  const archive = `${RNFS.CachesDirectoryPath}/${id}.tar.bz2`;
-  const { promise } = RNFS.downloadFile({
-    fromUrl: `${RELEASE}/${id}.tar.bz2`,
-    toFile: archive,
-    progressInterval: 300,
-    progress: (p) => p.contentLength > 0 && onProgress?.((p.bytesWritten / p.contentLength) * 0.9),
-  });
-  try {
-    const res = await promise;
-    if (res.statusCode !== 200) throw new Error(`server answered ${res.statusCode}`);
-    const out = await extraction().extractArchive({ modelId: id, archivePath: archive, format: 'tar.bz2' }, voicesDir(), {
-      onProgress: (e) => onProgress?.(0.9 + (e.percent / 100) * 0.1),
-    });
-    if (!out?.success) throw new Error('could not unpack the voice');
-    await RNFS.writeFile(readyMark(id), 'ok');
-  } finally {
-    await RNFS.unlink(archive).catch(() => {});
-  }
-}
+export const install = (id, onProgress) => downloadModel('voices', 'tts-models', id, onProgress);
 
 // One engine at a time: Piper voices are separate models, so switching voice reloads.
 let engine = null;
@@ -76,8 +46,8 @@ function start(voice) {
   engineVoice = voice;
   engine = (async () => {
     await previous?.then((t) => t.destroy()).catch(() => {});
-    if (!(await fs().exists(readyMark(voice)))) throw new Error('This voice is not downloaded');
-    const path = voiceDir(voice);
+    if (!(await isModelReady('voices', voice))) throw new Error('This voice is not downloaded');
+    const path = modelDir('voices', voice);
     await audio().setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true });
     return ttsLib().createTTS({ modelPath: { type: 'file', path }, modelType: 'vits', numThreads: 4 });
   })().catch((e) => { engine = null; engineVoice = null; throw e; });

@@ -41,16 +41,35 @@ for (const { id, lang } of TRANSLATIONS) {
 console.log('plan ok');
 
 import { perDay, planChapter, todaysReading, planProgress } from './plan.js';
-assert.equal(perDay({ days: 365 }), 4);
+assert.equal(perDay({ days: 365 }), 3.3);
 assert.equal(perDay({ days: 1189 }), 1);
-assert.equal(perDay({ days: 90 }), 14);
+assert.equal(perDay({ days: 90 }), 13.2);
 assert.equal(chapterName(planChapter({ order: 'nt' }, 0)), 'Matthew 1');
 assert.equal(chapterName(planChapter({ order: 'nt' }, 260)), 'Genesis 1'); // NT has 260 chapters, then the OT
 assert.equal(chapterName(chapterAt(-1)), 'Revelation 22');
 let p = { chapter: 0, streak: 0, best: 0, lastDay: null, plan: { days: 365, order: 'canon' } };
-assert.deepEqual(todaysReading(p).map(chapterName), ['Genesis 1', 'Genesis 2', 'Genesis 3', 'Genesis 4']);
+assert.deepEqual(todaysReading(p).map(chapterName), ['Genesis 1', 'Genesis 2', 'Genesis 3']);
 p = finishToday(p);
-assert.equal(p.chapter, 4);
-assert.deepEqual(todaysReading(p).map(chapterName), ['Genesis 1', 'Genesis 2', 'Genesis 3', 'Genesis 4']); // still shows today's, marked done
+assert.equal(p.chapter, 3);
+assert.deepEqual(todaysReading(p).map(chapterName), ['Genesis 1', 'Genesis 2', 'Genesis 3']); // still shows today's, marked done
 assert.ok(planProgress(p) > 0);
 console.log('plans ok');
+
+import { planStatus, dayChapters, markThrough, daysBetween } from './plan.js';
+assert.equal(daysBetween('2026-01-30', '2026-02-02'), 3);
+const year = { days: 365, order: 'canon', start: '2026-01-01' };
+let y = { chapter: 0, streak: 0, best: 0, lastDay: null, plan: year };
+let st = planStatus(y, new Date(2026, 0, 5)); // day 5, nothing read
+assert.deepEqual([st.day, st.completed, st.behind, st.total], [5, 0, 4, 365]);
+assert.deepEqual(dayChapters(year, 2).map(chapterName), ['Genesis 4', 'Genesis 5', 'Genesis 6']);
+assert.equal(chapterName(dayChapters(year, 365).at(-1)), 'Revelation 22'); // ends exactly on day 365
+assert.equal(dayChapters(year, 366).length, 0);
+assert.equal(Array.from({ length: 365 }, (_, i) => dayChapters(year, i + 1).length).reduce((a, b) => a + b), 1189); // every chapter once
+assert.ok(Array.from({ length: 365 }, (_, i) => dayChapters(year, i + 1).length).every((n) => n === 3 || n === 4));
+y = markThrough(y, 4, new Date(2026, 0, 5)); // catch up the 4 missed days
+assert.deepEqual([planStatus(y, new Date(2026, 0, 5)).behind, y.chapter, y.lastDay], [0, 13, null]);
+y = markThrough(y, 5, new Date(2026, 0, 5)); // and today
+assert.deepEqual([planStatus(y, new Date(2026, 0, 5)).behind, y.streak, y.lastDay], [0, 1, '2026-01-05']);
+y = markThrough(y, 4, new Date(2026, 0, 5)); // undo today
+assert.deepEqual([y.chapter, y.streak, y.lastDay], [13, 0, null]);
+console.log('year ok');

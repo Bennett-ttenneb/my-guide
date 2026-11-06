@@ -2,8 +2,8 @@
   "expo": {
     "name": "My Guide",
     "slug": "morning-bible",
-    "version": "2.2.0",
-    "orientation": "portrait",
+    "version": "2.3.0",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
@@ -17,7 +17,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.bbotnics.myguide",
-      "versionCode": 11
+      "versionCode": 12
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -51,7 +51,9 @@
             "extraProguardRules": "# WorkManager creates its Room database reflectively; R8 removed the constructor and 2.1.1 crashed on launch.\n-keep class * extends androidx.room.RoomDatabase { <init>(); }\n-keep class androidx.work.impl.** { *; }\n# sherpa-onnx native code looks up its Java config fields by name; R8 renamed them and choosing an AI voice crashed 2.1.2.\n-keep class com.k2fsa.sherpa.onnx.** { *; }"
           }
         }
-      ]
+      ],
+      "expo-sharing",
+      "expo-sqlite"
     ]
   }
 }

@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Image, KeyboardAvoidingView, Modal, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Linking, Modal, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import { RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import * as T from './transcribe';
+import { findSpokenRefs, toPoints } from './spoken';
+import { verseLabel, verseText } from './nav';
+import { sharePdf } from './notePdf';
 import { useTheme } from './theme';
 import { keep } from './attachments';
 import Sketch, { DrawingPreview } from './Sketch';
@@ -22,10 +28,11 @@ export function normalizeNote(n) {
 export const noteText = (n) => n.blocks.filter((b) => b.type === 'text' || b.type === 'check').map((b) => b.text).join('\n');
 export const isEmptyNote = (n) => !n.title.trim() && n.blocks.every((b) => (b.type === 'text' || b.type === 'check') && !b.text.trim());
 
-function plain(n) {
+export function plain(n, bible) {
   const lines = n.blocks.map((b, i) => {
     if (b.type === 'check') return `${b.done ? '☑' : '☐'} ${b.text}`;
     if (b.type === 'text') return `${b.style?.list === 'bullet' ? '• ' : b.style?.list === 'number' ? `${listNumber(n.blocks, i)}. ` : ''}${b.text}`;
+    if (b.type === 'verse') return `📖 ${verseLabel(b)}${bible ? ` — ${verseText(bible, b)}` : ''}`;
     return { audio: '[voice recording]', image: '[photo]', drawing: '[drawing]' }[b.type];
   });
   return [n.title, ...lines].filter(Boolean).join('\n');
@@ -40,7 +47,7 @@ function listNumber(blocks, i) {
 const when = (ms) => new Date(ms).toLocaleString(undefined, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 const clock = (ms) => { const s = Math.floor((ms ?? 0) / 1000); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
 
-export default function RichNote({ note, onSave, onDelete, onClose }) {
+export default function RichNote({ note, bible, inline, onSave, onDelete, onOpenVerse, onVerseHeard, onAutosave }) {
   const c = useTheme();
   const styles = useMemo(() => makeStyles(c), [c]);
   const { width } = useWindowDimensions();
@@ -56,9 +63,30 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
   const inputs = useRef({});
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const rec = useAudioRecorderState(recorder, 250);
+  const liveStop = useRef(null); // stop() of the running live transcription
+  const [live, setLive] = useState(null); // { start } while transcribing live
+  const [partial, setPartial] = useState('');
+  const [heard, setHeard] = useState(null); // last scripture heard while transcribing
+  const [peek, setPeek] = useState(null); // verse shown in a popup (phones; split view opens it beside the note)
+  const [job, setJob] = useState(null); // { label, progress, cancel } for downloads and file transcription
+  const [, tick] = useState(0);
+
+  useEffect(() => {
+    if (!live) return;
+    const t = setInterval(() => tick((n) => n + 1), 1000);
+    return () => clearInterval(t);
+  }, [live]);
+  const closed = useRef(false); // set once the note is saved or deleted on purpose
+  useEffect(() => () => {
+    liveStop.current?.();
+    deactivateKeepAwake('transcribe').catch(() => {});
+    if (!closed.current && dirty.current) onAutosave?.({ ...docRef.current, updated: Date.now() }); // e.g. rotated into split view
+  }, []);
 
   // Every change goes through here so undo/redo works. Typing in the same block within a second is one undo step.
+  const dirty = useRef(false); // anything changed since this editor opened
   function change(next, typingIn = null) {
+    dirty.current = true;
     const prev = docRef.current;
     const now = Date.now();
     const sameBurst = typingIn && lastEdit.current.block === typingIn && now - lastEdit.current.at < 1000;
@@ -182,29 +210,144 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
     }
   }
 
-  const finish = () => { if (rec.isRecording) stopRecording(); onSave({ ...docRef.current, updated: Date.now() }); };
+  // Each finished sentence joins the running transcript; scriptures in it become tappable links right after it.
+  function addSentence(sentence) {
+    const blocks = [...docRef.current.blocks];
+    const last = blocks[blocks.length - 1];
+    if (last?.type === 'text' && (last.transcript || (!last.text && !last.style?.list))) {
+      blocks[blocks.length - 1] = { ...last, transcript: true, text: last.text ? `${last.text} ${sentence}` : sentence };
+    } else {
+      blocks.push({ ...textBlock(sentence), transcript: true });
+    }
+    const refs = findSpokenRefs(sentence);
+    for (const r of refs) blocks.push({ key: key(), type: 'verse', ...r });
+    if (refs.length) blocks.push({ ...textBlock(), transcript: true });
+    setBlocks(blocks, 'transcript');
+    if (refs.length) { setHeard(refs[refs.length - 1]); onVerseHeard?.(refs[refs.length - 1]); }
+  }
+
+  async function askMicrophone() {
+    const { granted, canAskAgain } = await requestRecordingPermissionsAsync();
+    if (granted) return true;
+    Alert.alert('Microphone needed',
+      'My Guide uses the microphone to turn speech into text. It is processed on your phone and never recorded or sent anywhere.',
+      [{ text: 'Not now', style: 'cancel' }, ...(canAskAgain ? [] : [{ text: 'Open settings', onPress: () => Linking.openSettings() }])]);
+    return false;
+  }
+
+  async function ensureSpeechModel() {
+    if (await T.isInstalled()) return true;
+    const yes = await new Promise((res) => Alert.alert('Download speech recognition?',
+      `Speech to text runs entirely on your phone, so it works offline. It needs a one-time download of about ${T.MODEL_MB} MB (use Wi-Fi).`,
+      [{ text: 'Not now', style: 'cancel', onPress: () => res(false) }, { text: 'Download', onPress: () => res(true) }]));
+    if (!yes) return false;
+    setJob({ label: 'Downloading speech recognition', progress: 0 });
+    try {
+      await T.install((progress) => setJob({ label: 'Downloading speech recognition', progress }));
+      return true;
+    } catch (e) {
+      Alert.alert('Download did not finish', `${e?.message ?? e}. Check your internet connection and try again.`);
+      return false;
+    } finally {
+      setJob(null);
+    }
+  }
+
+  async function toggleLive() {
+    if (liveStop.current) {
+      const stop = liveStop.current;
+      liveStop.current = null;
+      setLive(null);
+      await stop();
+      deactivateKeepAwake('transcribe').catch(() => {});
+      return;
+    }
+    if (rec.isRecording) return Alert.alert('Recording in progress', 'Stop the voice recording first.');
+    if (!(await askMicrophone()) || !(await ensureSpeechModel())) return;
+    try {
+      await activateKeepAwakeAsync('transcribe'); // the screen stays on so long sermons are not cut off
+      setPartial('');
+      setHeard(null);
+      liveStop.current = await T.startLive({ onPartial: setPartial, onSentence: addSentence, onError: (m) => setPartial(`⚠ ${m}`) });
+      setLive({ start: Date.now() });
+    } catch (e) {
+      deactivateKeepAwake('transcribe').catch(() => {});
+      Alert.alert('Could not start transcribing', String(e?.message ?? e));
+    }
+  }
+
+  async function importAudio() {
+    setMenu(false);
+    const res = await DocumentPicker.getDocumentAsync({ type: ['audio/*'], copyToCacheDirectory: true });
+    if (res.canceled || !res.assets?.[0]) return;
+    if (!(await ensureSpeechModel())) return;
+    const a = res.assets[0];
+    const cancel = { stop: false };
+    const label = `Transcribing ${a.name}`;
+    setJob({ label, progress: 0, cancel });
+    try {
+      await activateKeepAwakeAsync('transcribe');
+      const sentences = await T.transcribeFile(a.uri, { onProgress: (progress) => setJob({ label, progress, cancel }), shouldStop: () => cancel.stop });
+      const points = toPoints(sentences);
+      if (!points.length) return Alert.alert('No speech found', 'This file did not contain speech the app could recognise.');
+      const added = [textBlock(`From ${a.name}`, { heading: true })];
+      for (const p of points) {
+        added.push(textBlock(p, { list: 'bullet' }));
+        for (const r of findSpokenRefs(p)) added.push({ key: key(), type: 'verse', ...r });
+      }
+      added.push(textBlock());
+      const now = docRef.current.blocks;
+      const blank = now.length === 1 && now[0].type === 'text' && !now[0].text;
+      setBlocks([...(blank ? [] : now), ...added]);
+    } catch (e) {
+      Alert.alert('Could not transcribe this file', String(e?.message ?? e));
+    } finally {
+      setJob(null);
+      deactivateKeepAwake('transcribe').catch(() => {});
+    }
+  }
+
+  const openVerse = (r) => (inline ? onOpenVerse?.(r) : setPeek(r));
+
+  function share() {
+    Alert.alert('Share note', undefined, [
+      { text: 'As text', onPress: () => Share.share({ message: plain(docRef.current, bible) }) },
+      { text: 'As PDF', onPress: () => sharePdf(docRef.current, bible).catch((e) => Alert.alert('Could not make the PDF', String(e?.message ?? e))) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
+  const finish = async () => {
+    if (liveStop.current) await toggleLive(); // saves the last sentence first
+    if (rec.isRecording) await stopRecording();
+    closed.current = true;
+    onSave({ ...docRef.current, updated: Date.now() });
+  };
   const chars = doc.title.length + noteText(doc).replace(/\n/g, '').length;
   const focused = doc.blocks[focus];
   const fs = focused?.style ?? {};
   const contentWidth = width - 40;
 
   return (
-    <Modal visible animationType="slide" onRequestClose={finish}>
-      <KeyboardAvoidingView style={styles.page} behavior="padding">
+    <Wrap inline={inline} onRequestClose={finish}>
+      <KeyboardAvoidingView style={[styles.page, inline && { paddingTop: 4 }]} behavior="padding">
         <View style={styles.head}>
           <Pressable onPress={finish} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Save and go back"><Text style={styles.hText}>←</Text></Pressable>
           <View style={{ flex: 1 }} />
           <Pressable onPress={undo} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Undo"><Text style={[styles.hText, !past.length && styles.off]}>↶</Text></Pressable>
           <Pressable onPress={redo} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Redo"><Text style={[styles.hText, !future.length && styles.off]}>↷</Text></Pressable>
-          <Pressable onPress={() => Share.share({ message: plain(docRef.current) })} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Share note"><Text style={styles.hText}>⇪</Text></Pressable>
+          <Pressable onPress={share} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Share note"><Text style={styles.hText}>⇪</Text></Pressable>
           <Pressable onPress={() => setMenu(!menu)} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="More"><Text style={styles.hText}>⋮</Text></Pressable>
           <Pressable onPress={finish} style={styles.hBtn} accessibilityRole="button" accessibilityLabel="Done"><Text style={[styles.hText, { color: c.accent }]}>✓</Text></Pressable>
         </View>
         {menu && (
           <View style={styles.menu}>
+            <Pressable style={styles.menuRow} accessibilityRole="button" onPress={importAudio}>
+              <Text style={styles.menuText}>🎧  Transcribe an audio file</Text>
+            </Pressable>
             <Pressable style={styles.menuRow} accessibilityRole="button" onPress={() => Alert.alert('Delete this note?', 'Its recordings, photos and drawings are deleted too.', [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => onDelete(docRef.current) },
+              { text: 'Delete', style: 'destructive', onPress: () => { closed.current = true; onDelete(docRef.current); } },
             ])}>
               <Text style={[styles.menuText, { color: c.danger }]}>🗑  Delete note</Text>
             </Pressable>
@@ -222,6 +365,17 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
               <Attachment key={b.key} styles={styles} onDelete={() => removeBlock(i)} label="photo">
                 <Image source={{ uri: b.uri }} style={{ width: contentWidth, height: (contentWidth * b.h) / b.w, borderRadius: 12 }} resizeMode="cover" accessibilityLabel="Photo" />
               </Attachment>
+            );
+            if (b.type === 'verse') return (
+              <Pressable key={b.key} onPress={() => openVerse(b)} style={styles.verseLink} accessibilityRole="link" accessibilityLabel={`Open ${verseLabel(b)}`}>
+                <View style={styles.verseHead}>
+                  <Text style={styles.verseRef}>📖 {verseLabel(b)} ›</Text>
+                  <Pressable onPress={() => removeBlock(i)} style={styles.verseRemove} accessibilityRole="button" accessibilityLabel={`Remove link to ${verseLabel(b)}`}>
+                    <Text style={styles.muted}>✕</Text>
+                  </Pressable>
+                </View>
+                <Text style={styles.verseText} numberOfLines={3}>{bible ? verseText(bible, b) : ''}</Text>
+              </Pressable>
             );
             if (b.type === 'drawing') return (
               <Attachment key={b.key} styles={styles} onDelete={() => removeBlock(i)} label="drawing">
@@ -264,6 +418,30 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
           <Pressable style={{ minHeight: 160 }} onPress={() => focusBlock(doc.blocks.length - 1)} accessibilityLabel="Continue writing" />
         </ScrollView>
 
+        {job && (
+          <View style={styles.panel}>
+            <Text style={styles.panelText}>{job.label}… {Math.round(job.progress * 100)}%</Text>
+            <View style={styles.track}><View style={[styles.fill, { width: `${Math.round(job.progress * 100)}%` }]} /></View>
+            {job.cancel && (
+              <Pressable onPress={() => { job.cancel.stop = true; }} style={styles.panelBtn} accessibilityRole="button"><Text style={styles.panelBtnText}>Stop</Text></Pressable>
+            )}
+          </View>
+        )}
+        {live && (
+          <View style={styles.panel}>
+            <View style={styles.panelRow}>
+              <Text style={styles.recDot}>●</Text>
+              <Text style={[styles.panelText, { flex: 1 }]}>Transcribing  {clock(Date.now() - live.start)}</Text>
+              <Pressable onPress={toggleLive} style={styles.panelBtn} accessibilityRole="button"><Text style={styles.panelBtnText}>■ Stop</Text></Pressable>
+            </View>
+            {partial ? <Text style={styles.partial} numberOfLines={2}>{partial}</Text> : <Text style={styles.partialHint}>Listening… speak or let the preacher talk.</Text>}
+            {heard && (
+              <Pressable onPress={() => openVerse(heard)} style={styles.heard} accessibilityRole="link">
+                <Text style={styles.heardText}>📖 Heard {verseLabel(heard)}: tap to open</Text>
+              </Pressable>
+            )}
+          </View>
+        )}
         {rec.isRecording && (
           <View style={styles.recording}>
             <Text style={styles.recDot}>●</Text>
@@ -294,6 +472,7 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
               { text: 'Choose from gallery', onPress: () => addImage(false) },
               { text: 'Cancel', style: 'cancel' },
             ])} name="Add photo" styles={styles} />
+            <Tool label={live ? '■' : '🗣'} on={!!live} onPress={toggleLive} name={live ? 'Stop transcribing' : 'Transcribe speech to text'} styles={styles} />
             <Tool label="✍" onPress={() => setSketch({ index: null, initial: null })} name="Draw" styles={styles} />
             <Tool label="☑" on={focused?.type === 'check'} onPress={toggleCheck} name="Checklist" styles={styles} />
             <Tool label="T" onPress={() => setFormatBar(true)} name="Text formatting" styles={styles} />
@@ -309,8 +488,33 @@ export default function RichNote({ note, onSave, onDelete, onClose }) {
           setSketch(null);
         }} />
       )}
-    </Modal>
+      <Modal visible={!!peek} transparent animationType="fade" onRequestClose={() => setPeek(null)}>
+        <Pressable style={styles.peekBack} onPress={() => setPeek(null)}>
+          {peek && (
+            <Pressable style={styles.peekCard} onPress={() => {}}>
+              <Text style={styles.peekTitle}>📖 {verseLabel(peek)}</Text>
+              <ScrollView style={{ maxHeight: 360 }}>
+                {(bible?.[peek.book]?.[peek.chapter - 1] ?? []).map((t, v) => (t && (!peek.verse || (v + 1 >= peek.verse && v + 1 <= (peek.to || peek.verse))) ? (
+                  <Text key={v} style={styles.peekVerse}><Text style={styles.peekNum}>{v + 1} </Text>{t}</Text>
+                ) : null))}
+              </ScrollView>
+              <View style={styles.peekRow}>
+                <Pressable onPress={() => setPeek(null)} style={styles.peekBtn} accessibilityRole="button"><Text style={styles.peekBtnText}>Close</Text></Pressable>
+                <Pressable onPress={async () => { const r = peek; setPeek(null); await finish(); onOpenVerse?.(r); }} style={[styles.peekBtn, styles.peekPrimary]} accessibilityRole="button">
+                  <Text style={[styles.peekBtnText, { color: '#fff' }]}>Open in Bible</Text>
+                </Pressable>
+              </View>
+            </Pressable>
+          )}
+        </Pressable>
+      </Modal>
+    </Wrap>
   );
+}
+
+// Full-screen on phones; inline when shown beside the Bible in split view.
+function Wrap({ inline, onRequestClose, children }) {
+  return inline ? <View style={{ flex: 1 }}>{children}</View> : <Modal visible animationType="slide" onRequestClose={onRequestClose}>{children}</Modal>;
 }
 
 function Tool({ label, on, onPress, name, bold, italic, underline, strike, styles }) {
@@ -361,6 +565,32 @@ function AudioBlock({ block, onDelete, styles, c }) {
 }
 
 const makeStyles = (c) => StyleSheet.create({
+  muted: { color: c.muted, fontSize: 15 },
+  peekBack: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', padding: 20 },
+  peekCard: { backgroundColor: c.bg, borderRadius: 18, padding: 18 },
+  peekTitle: { fontSize: 19, fontWeight: '800', color: c.text, marginBottom: 10 },
+  peekVerse: { fontSize: 17, lineHeight: 26, color: c.text, marginBottom: 6 },
+  peekNum: { color: c.accent, fontWeight: '700', fontSize: 13 },
+  peekRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 12 },
+  peekBtn: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, justifyContent: 'center', backgroundColor: c.soft },
+  peekPrimary: { backgroundColor: c.accent },
+  peekBtnText: { fontSize: 16, fontWeight: '700', color: c.text },
+  verseLink: { borderLeftWidth: 3, borderLeftColor: c.accent, backgroundColor: c.soft, borderRadius: 10, padding: 10, marginVertical: 6 },
+  verseHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  verseRef: { color: c.accent, fontWeight: '700', fontSize: 15 },
+  verseRemove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  verseText: { color: c.text, fontSize: 15, fontStyle: 'italic', lineHeight: 22 },
+  panel: { marginHorizontal: 12, marginBottom: 6, padding: 12, borderRadius: 14, backgroundColor: c.soft, gap: 6 },
+  panelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  panelText: { color: c.text, fontSize: 15, fontWeight: '600' },
+  panelBtn: { alignSelf: 'flex-end', minHeight: 40, paddingHorizontal: 14, borderRadius: 20, backgroundColor: c.accent, justifyContent: 'center' },
+  panelBtnText: { color: '#fff', fontWeight: '700' },
+  track: { height: 8, borderRadius: 4, backgroundColor: c.border, overflow: 'hidden' },
+  fill: { height: 8, backgroundColor: c.accent },
+  partial: { color: c.text, fontSize: 15, fontStyle: 'italic' },
+  partialHint: { color: c.muted, fontSize: 14 },
+  heard: { minHeight: 40, justifyContent: 'center', borderRadius: 10, backgroundColor: c.accentSoft, paddingHorizontal: 10 },
+  heardText: { color: c.accent, fontWeight: '700' },
   page: { flex: 1, backgroundColor: c.bg, paddingTop: 44 },
   head: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
   hBtn: { width: 46, height: 48, alignItems: 'center', justifyContent: 'center' },
