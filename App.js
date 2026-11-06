@@ -108,7 +108,7 @@ export default function App() {
   // screen turning off), use the phone's voice.
   const voiceFor = (s, { overnight = false } = {}) => ({
     phoneVoice: s.voice,
-    aiVoice: !overnight && AI.supported && typeof s.aiVoice === 'number' && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
+    aiVoice: !overnight && AI.supported && AI.isAiVoice(s.aiVoice) && TRANSLATIONS.find((t) => t.id === s.translation)?.lang === 'en' ? s.aiVoice : null,
   });
 
   // One verse per utterance: Android caps utterance length, and it lets the text follow along verse by verse.

@@ -17,14 +17,12 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
   const [voicesOpen, setVoicesOpen] = useState(false);
   const voiceName = voices.find((v) => v.identifier === state.voice)?.name ?? 'Phone default';
 
-  const [aiState, setAiState] = useState('checking'); // checking | missing | downloading | ready | unsupported
-  const [progress, setProgress] = useState(0);
+  const [installed, setInstalled] = useState(null); // ids of downloaded AI voices; null while checking
+  const [downloading, setDownloading] = useState(null); // { id, progress }
   const [aiError, setAiError] = useState(null);
 
   useEffect(() => {
-    if (!visible) return;
-    if (!AI.supported) return setAiState('unsupported');
-    AI.isInstalled().then((ok) => setAiState(ok ? 'ready' : 'missing')).catch(() => setAiState('missing'));
+    if (visible && AI.supported) AI.installedVoices().then(setInstalled).catch(() => setInstalled([]));
   }, [visible]);
 
   function pickVoice(identifier) {
@@ -39,16 +37,20 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
     speakQueue([{ text: SAMPLE }], { aiVoice: id });
   }
 
-  async function download() {
+  // A downloaded voice is chosen and previewed; any other is downloaded first (one at a time).
+  async function tapAiVoice(id) {
+    if (installed?.includes(id)) return pickAiVoice(id);
+    if (downloading) return;
     setAiError(null);
-    setAiState('downloading');
+    setDownloading({ id, progress: 0 });
     try {
-      await AI.install(setProgress);
-      setAiState('ready');
-      pickAiVoice(state.aiVoice ?? AI.AI_VOICES[0][0]);
+      await AI.install(id, (progress) => setDownloading({ id, progress }));
+      setInstalled((list) => [...(list ?? []), id]);
+      pickAiVoice(id);
     } catch (e) {
-      setAiError('Download did not finish. Check your internet connection and try again; what was already downloaded is kept.');
-      setAiState('missing');
+      setAiError(`Download did not finish (${e?.message ?? e}). Check your internet connection and try again.`);
+    } finally {
+      setDownloading(null);
     }
   }
 
@@ -91,29 +93,22 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Row>
 
         <Text style={styles.section}>Natural AI voice</Text>
-        {aiState === 'unsupported' && <Text style={styles.muted}>Available in the phone app.</Text>}
-        {aiState === 'missing' && (
+        {!AI.supported ? <Text style={styles.muted}>Available in the phone app.</Text> : (
           <>
-            <Text style={styles.muted}>A human-sounding voice that runs on your phone. One-time download of about 98 MB (use Wi-Fi), then it works offline. English Bibles only.</Text>
+            <Text style={styles.muted}>Human-sounding voices that run on your phone. Each is a one-time download of about 20 MB (use Wi-Fi), then works offline. Tap one to download it; tap a downloaded one to hear and use it. Overnight play and non-English Bibles use the phone voice below.</Text>
             {aiError && <Text style={[styles.muted, { color: c.danger, marginTop: 6 }]}>{aiError}</Text>}
-            <Pressable style={styles.button} onPress={download} accessibilityRole="button"><Text style={styles.buttonText}>Download natural voice</Text></Pressable>
-          </>
-        )}
-        {aiState === 'downloading' && (
-          <>
-            <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} /></View>
-            <Text style={styles.muted}>Downloading… {Math.round(progress * 100)}%. Keep the app open.</Text>
-          </>
-        )}
-        {aiState === 'ready' && (
-          <>
-            <Text style={styles.muted}>Tap a voice to hear it and use it. Overnight play and non-English Bibles use the phone voice below.</Text>
-            {AI.AI_VOICES.map(([id, label]) => (
-              <Pressable key={id} onPress={() => pickAiVoice(id)} style={styles.voiceRow} accessibilityRole="button">
-                <Text style={styles.value}>{state.aiVoice === id ? '✓ ' : ''}{label}</Text>
-              </Pressable>
-            ))}
-            {state.aiVoice && (
+            {AI.AI_VOICES.map(([id, label]) => {
+              const have = installed?.includes(id);
+              const busy = downloading?.id === id;
+              return (
+                <Pressable key={id} onPress={() => tapAiVoice(id)} disabled={installed === null || (!!downloading && !busy)} style={styles.voiceRow} accessibilityRole="button"
+                  accessibilityLabel={`${label}. ${have ? (state.aiVoice === id ? 'Selected' : 'Downloaded') : 'Download about 20 megabytes'}`}>
+                  <Text style={styles.value}>{state.aiVoice === id ? '✓ ' : ''}{label}</Text>
+                  <Text style={styles.muted}>{busy ? `Downloading… ${Math.round(downloading.progress * 100)}%` : have ? 'Downloaded' : installed === null ? '…' : '⬇ Download · 20 MB'}</Text>
+                </Pressable>
+              );
+            })}
+            {AI.isAiVoice(state.aiVoice) && (
               <Pressable onPress={() => { stopSpeaking(); onChange({ aiVoice: null }); }} style={styles.linkBtn} accessibilityRole="button">
                 <Text style={[styles.linkText, { color: c.accent }]}>Use the phone voice instead</Text>
               </Pressable>
@@ -141,7 +136,7 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Pressable>
 
         <Text style={styles.credit}>My Guide · made by BBotnics Industries</Text>
-        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voice: Kokoro-82M (Apache-2.0) via sherpa-onnx.</Text>
+        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voices: Piper models via sherpa-onnx.</Text>
         <View style={styles.legal}>
           {[['Privacy policy', 'PRIVACY.md'], ['Terms of use', 'TERMS.md']].map(([label, file]) => (
             <Pressable key={file} onPress={() => Linking.openURL(`https://github.com/Bennett-ttenneb/my-guide/blob/main/${file}`)} style={styles.linkBtn} accessibilityRole="link">

@@ -28,7 +28,7 @@ This information never leaves your phone unless you choose to share it (see sect
 | **Microphone** | To record voice notes. | Only when you tap the record button in a note |
 | **Camera** | To take a photo for a note. | Only when you choose "Take photo" |
 | **Photos** | To add an existing photo to a note. Android's photo picker only gives the app the photos you select. | Only when you choose "Choose from gallery" |
-| **Internet** | Only to download the optional natural AI voice. | Only when you tap "Download natural voice" |
+| **Internet** | Only to download the optional natural AI voice. | Only when you tap a voice to download it |
 
 You can refuse or withdraw any permission in your phone's settings. The rest of the app keeps working.
 
@@ -36,7 +36,7 @@ You can refuse or withdraw any permission in your phone's settings. The rest of 
 
 The Bibles, devotionals and prayers are built into the app and work fully offline.
 
-The only time the app connects to the internet is if you choose to **download the natural AI voice** (about 98 MB). The app then contacts **GitHub** (github.com and api.github.com) to download the voice model published by the sherpa-onnx project. Like any website, GitHub receives standard technical information such as your IP address when the download happens; this is covered by [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). No personal information from the app is sent.
+The only time the app connects to the internet is if you choose to **download a natural AI voice** (about 20 MB each). The app then contacts **GitHub** (github.com and api.github.com) to download the voice models published by the sherpa-onnx project. Like any website, GitHub receives standard technical information such as your IP address when the download happens; this is covered by [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). No personal information from the app is sent.
 
 ## 5. Sharing
 

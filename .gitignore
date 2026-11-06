@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Android signing key and its passwords (BBotnics Industries) - never commit
+credentials.json
+credentials/

@@ -19,7 +19,7 @@ Get the latest APK from the **[Releases page](https://github.com/Bennett-ttenneb
 - Reads the Bible aloud, highlighting each verse as it goes
 - Morning reminder that opens today's reading
 - Play through the night with a sleep timer (15 minutes to 8 hours)
-- Optional natural AI voice (Kokoro, 9 voices, about 98 MB one-time download, then offline)
+- Optional natural AI voices (Piper, 8 voices, about 20 MB each, then offline)
 
 **Study and prayer**
 - Highlight verses in five colours, write notes on verses
@@ -67,5 +67,5 @@ node topics.test.mjs   # every scripture reference in the devotionals
 ## Credits and licences
 
 - Bible texts from [eBible.org](https://ebible.org). English translations are public domain. isiNdebele and Setswana are © Biblica, Inc., licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-- Natural voice: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache 2.0) via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache 2.0).
+- Natural voices: [Piper](https://github.com/rhasspy/piper) voice models (licences vary by voice, see each voice's model card) via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache 2.0).
 - Devotionals, prayers, design and code © 2026 BBotnics Industries. All rights reserved.

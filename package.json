@@ -4,7 +4,6 @@
   "main": "index.js",
   "dependencies": {
     "@dr.pogodin/react-native-fs": "^2.41.0",
-    "@kesha-antonov/react-native-background-downloader": "^4.7.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.23",
     "expo-asset": "~58.0.20",

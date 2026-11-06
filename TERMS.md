@@ -28,7 +28,7 @@ The Bible translations in the app come from [eBible.org](https://ebible.org):
 
 The devotionals, prayers, declarations and reflections in the app, the app's design and its code are © 2026 BBotnics Industries. Scripture quoted inside them comes from the translations above. You may share individual verses, prayers and devotionals with others for personal or church use, provided you do not sell them.
 
-The optional natural voice uses the Kokoro-82M model (Apache License 2.0) run by the sherpa-onnx project (Apache License 2.0).
+The optional natural voices are Piper voice models, each under the licence stated in its model card, run by the sherpa-onnx project (Apache License 2.0).
 
 ## 5. Your content
 

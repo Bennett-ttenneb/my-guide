@@ -1,58 +1,94 @@
-// On-device natural voice: Kokoro-82M (Apache-2.0) run by sherpa-onnx, which is built for the
-// React Native new architecture. (onnxruntime-react-native is not: its module is null on RN 0.88,
-// which crashed v2.0.0.) The model is downloaded once (~98 MB); after that it works offline.
+// On-device natural voices: Piper (VITS) models run by sherpa-onnx, which is built for the React Native
+// new architecture. Each voice is its own ~20 MB download; after that it works offline.
+// (Kokoro sounded better but generated speech 4x slower than real time on a Dimensity 1080 phone,
+// leaving 15–25 s silences between verses, so 2.1.3 moved to Piper.)
 import { Platform } from 'react-native';
 
-const MODEL = 'kokoro-int8-en-v0_19';
+const RELEASE = 'https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models';
 
-// Speaker ids of kokoro-en-v0_19 (sherpa-onnx docs: 0 af … 10 bm_lewis).
+// sherpa-onnx tts-models release ids (int8 medium: fast and small).
 export const AI_VOICES = [
-  [1, 'Bella · warm US woman'], [2, 'Nicole · soft US woman'], [3, 'Sarah · US woman'],
-  [6, 'Michael · US man'], [5, 'Adam · deep US man'],
-  [7, 'Emma · British woman'], [8, 'Isabella · British woman'], [9, 'George · British man'], [10, 'Lewis · British man'],
+  ['vits-piper-en_US-hfc_female-medium-int8', 'Grace · warm US woman'],
+  ['vits-piper-en_US-amy-medium-int8', 'Amy · US woman'],
+  ['vits-piper-en_US-hfc_male-medium-int8', 'Henry · calm US man'],
+  ['vits-piper-en_US-ryan-medium-int8', 'Ryan · US man'],
+  ['vits-piper-en_GB-jenny_dioco-medium-int8', 'Jenny · British woman'],
+  ['vits-piper-en_GB-cori-medium-int8', 'Cori · British woman'],
+  ['vits-piper-en_GB-alan-medium-int8', 'Alan · British man'],
+  ['vits-piper-en_GB-northern_english_male-medium-int8', 'Thomas · northern English man'],
 ];
+export const isAiVoice = (id) => AI_VOICES.some(([v]) => v === id);
 
 export const supported = Platform.OS === 'android' || Platform.OS === 'ios';
 
 // Native modules are only required when used, so the web preview keeps working.
-const dl = () => require('react-native-sherpa-onnx/download');
 const ttsLib = () => require('react-native-sherpa-onnx/tts');
+const extraction = () => require('react-native-sherpa-onnx/extraction');
 const fs = () => require('@dr.pogodin/react-native-fs');
 const audio = () => require('expo-audio');
 
-export async function isInstalled() {
-  if (!supported) return false;
-  const { ModelCategory, isModelDownloaded } = dl();
-  return isModelDownloaded(ModelCategory.Tts, MODEL);
+const voicesDir = () => `${fs().DocumentDirectoryPath}/voices`;
+const voiceDir = (id) => `${voicesDir()}/${id}`;
+// Written last, so a half-finished download or unpack never counts as installed.
+const readyMark = (id) => `${voiceDir(id)}/.ready`;
+
+// Ids of the voices already downloaded. Also deletes the 98 MB Kokoro model left by 2.1.2/2.1.3.
+export async function installedVoices() {
+  if (!supported) return [];
+  const RNFS = fs();
+  const old = `${RNFS.DocumentDirectoryPath}/sherpa-onnx`;
+  if (await RNFS.exists(old)) await RNFS.unlink(old).catch(() => {});
+  const ok = await Promise.all(AI_VOICES.map(([id]) => RNFS.exists(readyMark(id)).catch(() => false)));
+  return AI_VOICES.filter((_, i) => ok[i]).map(([id]) => id);
 }
 
-// Downloads and unpacks the model. onProgress(0..1); download is the first 90%, unpacking the rest.
-export async function install(onProgress) {
-  const { ModelCategory, refreshModels, ensureModel } = dl();
-  await refreshModels(ModelCategory.Tts);
-  await ensureModel(ModelCategory.Tts, MODEL, {
-    onProgress: (p) => onProgress?.(p.phase?.startsWith('extract') ? 0.9 + p.percent / 1000 : (p.percent / 100) * 0.9),
+// Downloads one voice archive straight from the sherpa-onnx GitHub release and unpacks it.
+// onProgress(0..1): download is the first 90%, unpacking the rest. Throws with a readable message.
+export async function install(id, onProgress) {
+  const RNFS = fs();
+  await RNFS.mkdir(voicesDir());
+  const archive = `${RNFS.CachesDirectoryPath}/${id}.tar.bz2`;
+  const { promise } = RNFS.downloadFile({
+    fromUrl: `${RELEASE}/${id}.tar.bz2`,
+    toFile: archive,
+    progressInterval: 300,
+    progress: (p) => p.contentLength > 0 && onProgress?.((p.bytesWritten / p.contentLength) * 0.9),
   });
+  try {
+    const res = await promise;
+    if (res.statusCode !== 200) throw new Error(`server answered ${res.statusCode}`);
+    const out = await extraction().extractArchive({ modelId: id, archivePath: archive, format: 'tar.bz2' }, voicesDir(), {
+      onProgress: (e) => onProgress?.(0.9 + (e.percent / 100) * 0.1),
+    });
+    if (!out?.success) throw new Error('could not unpack the voice');
+    await RNFS.writeFile(readyMark(id), 'ok');
+  } finally {
+    await RNFS.unlink(archive).catch(() => {});
+  }
 }
 
+// One engine at a time: Piper voices are separate models, so switching voice reloads.
 let engine = null;
-function start() {
-  engine ??= (async () => {
-    const { ModelCategory, getModelPath } = dl();
-    const path = await getModelPath(ModelCategory.Tts, MODEL);
-    if (!path) throw new Error('Natural voice is not downloaded');
-    const { setAudioModeAsync } = audio();
-    await setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true });
-    return ttsLib().createTTS({ modelPath: { type: 'file', path }, modelType: 'kokoro', numThreads: 2 });
-  })().catch((e) => { engine = null; throw e; });
+let engineVoice = null;
+function start(voice) {
+  if (engine && engineVoice === voice) return engine;
+  const previous = engine;
+  engineVoice = voice;
+  engine = (async () => {
+    await previous?.then((t) => t.destroy()).catch(() => {});
+    if (!(await fs().exists(readyMark(voice)))) throw new Error('This voice is not downloaded');
+    const path = voiceDir(voice);
+    await audio().setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true });
+    return ttsLib().createTTS({ modelPath: { type: 'file', path }, modelType: 'vits', numThreads: 4 });
+  })().catch((e) => { engine = null; engineVoice = null; throw e; });
   return engine;
 }
 
 let clip = 0;
 // Generates speech for text into a temporary WAV file and returns its path.
 export async function prepare(text, voice) {
-  const tts = await start();
-  const generated = await tts.generateSpeech(text, { sid: Number(voice) || 0, speed: 1.0 });
+  const tts = await start(voice);
+  const generated = await tts.generateSpeech(text, { sid: 0, speed: 1.0 });
   const file = `${fs().CachesDirectoryPath}/verse-${clip++ % 4}.wav`; // a few rotating files; next one is prepared while one plays
   await ttsLib().saveAudioToFile(generated, file);
   return file;
