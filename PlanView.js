@@ -27,7 +27,7 @@ export default function PlanView({ visible, state, onClose, onMark, onOpen, onLi
         <View style={styles.summary}>
           <Text style={styles.big}>Day {Math.min(day, total)} of {total}</Text>
           <View style={styles.track}><View style={[styles.fill, { width: `${Math.round(planProgress(state) * 100)}%` }]} /></View>
-          <Text style={styles.muted}>{completed} days read · {Math.round(planProgress(state) * 100)}% of the Bible · about {perDay(state.plan)} chapters a day</Text>
+          <Text style={styles.muted}>{completed} days read · {Math.round(planProgress(state) * 100)}% of the Bible · {perDay(state.plan) === 1 ? "1 chapter" : `about ${perDay(state.plan)} chapters`} a day</Text>
           {state.plan.days !== 365 && (
             <Pressable onPress={onYear} style={styles.link} accessibilityRole="button"><Text style={styles.linkText}>Switch to Bible in a year (365 days)</Text></Pressable>
           )}
