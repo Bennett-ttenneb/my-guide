@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="432" viewBox="0 0 432 432"><defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f59a52"/><stop offset="1" stop-color="#b8400c"/></linearGradient></defs><g transform="scale(0.421875)"><g transform="translate(174.07999999999998 195.2) scale(0.66)">
+  <g>
+    <rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(-62 512 470)"/><rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(-38 512 470)"/><rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(-14 512 470)"/><rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(14 512 470)"/><rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(38 512 470)"/><rect x="506" y="190" width="12" height="120" rx="6" fill="rgba(255,255,255,0.8)" transform="rotate(62 512 470)"/>
+    <circle cx="512" cy="470" r="150" fill="#fff"/>
+    <path d="M512 610 C 430 560 300 552 196 588 L 196 812 C 300 778 430 786 512 836 Z" fill="#fff"/>
+    <path d="M512 610 C 594 560 724 552 828 588 L 828 812 C 724 778 594 786 512 836 Z" fill="#fff"/>
+    <path d="M512 612 L 512 834" stroke="rgba(0,0,0,0)" stroke-width="10" stroke-linecap="round"/>
+    
+      <path d="M248 640 C 330 618 410 622 470 648" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M776 640 C 694 618 614 622 554 648" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M248 680 C 330 658 410 662 470 688" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M776 680 C 694 658 614 662 554 688" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M248 720 C 330 698 410 702 470 728" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M776 720 C 694 698 614 702 554 728" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M248 760 C 330 738 410 742 470 768" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <path d="M776 760 C 694 738 614 742 554 768" stroke="rgba(0,0,0,0)" stroke-width="9" fill="none" stroke-linecap="round"/>
+  </g></g></g></svg>
