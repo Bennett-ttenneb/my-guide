@@ -81,6 +81,6 @@ node daily.test.mjs    # daily devotional rotation
 ## Credits and licences
 
 - Bible texts from [eBible.org](https://ebible.org). English translations are public domain. isiNdebele and Setswana are © Biblica, Inc., licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-- Speech to text: Kroko streaming English model via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
+- Speech to text: [Kroko ASR](https://huggingface.co/Banafo/Kroko-ASR) community model by Banafo (CC BY-SA 4.0) via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 - Natural voices: [Piper](https://github.com/rhasspy/piper) voice models (licences vary by voice, see each voice's model card) via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) (Apache 2.0).
 - Devotionals, prayers, design and code © 2026 BBotnics Industries. All rights reserved.

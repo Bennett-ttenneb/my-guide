@@ -144,7 +144,7 @@ export default function Settings({ visible, state, streak, voices, onChange, onS
         </Pressable>
 
         <Text style={styles.credit}>My Guide · made by BBotnics Industries</Text>
-        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voices: Piper models via sherpa-onnx.</Text>
+        <Text style={styles.footnote}>Bible texts from eBible.org: public domain, except where a licence is shown in the translation list. Natural voices: Piper models. Speech to text: Kroko ASR by Banafo (CC BY-SA 4.0). Both run on sherpa-onnx.</Text>
         <View style={styles.legal}>
           {[['Privacy policy', 'PRIVACY.md'], ['Terms of use', 'TERMS.md']].map(([label, file]) => (
             <Pressable key={file} onPress={() => Linking.openURL(`https://github.com/Bennett-ttenneb/my-guide/blob/main/${file}`)} style={styles.linkBtn} accessibilityRole="link">
