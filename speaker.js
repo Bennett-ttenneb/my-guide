@@ -18,27 +18,35 @@ export function speakQueue(items, { phoneVoice, aiVoice, onEnd }) {
     return;
   }
   (async () => {
-    // Generate the next item while the current one plays, so verses follow each other without long gaps.
-    let next = items.length ? AI.prepare(items[0].text, aiVoice) : null;
+    // Keep a few verses generated ahead of the one playing, so short verses do not leave gaps behind long ones.
+    const AHEAD = 3;
+    const live = () => run === id;
+    const ready = [];
+    const fill = (upTo) => {
+      for (let j = ready.length; j < Math.min(items.length, upTo + 1); j++) {
+        ready[j] = AI.prepare(items[j].text, aiVoice, live);
+        ready[j].catch(() => {}); // a failure is handled when it is awaited
+      }
+    };
     for (let i = 0; i < items.length; i++) {
       const { onStart, onDone } = items[i];
+      fill(i + AHEAD);
       try {
-        const file = await next;
-        if (run !== id) return;
-        next = i + 1 < items.length ? AI.prepare(items[i + 1].text, aiVoice) : null;
-        next?.catch(() => {}); // a failure is handled when it is awaited
+        const file = await ready[i];
+        if (!live()) return;
         onStart?.();
         await AI.play(file);
       } catch (e) {
+        if (!live()) return;
         // AI voice failed (e.g. model files removed): finish the rest with the phone voice.
         console.warn('AI voice failed, using phone voice', e);
-        if (run === id) speakQueue(items.slice(i), { phoneVoice, onEnd });
+        speakQueue(items.slice(i), { phoneVoice, onEnd });
         return;
       }
-      if (run !== id) return;
+      if (!live()) return;
       onDone?.();
     }
-    if (run === id) onEnd?.();
+    if (live()) onEnd?.();
   })();
 }
 

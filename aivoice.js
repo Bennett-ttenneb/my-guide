@@ -49,19 +49,33 @@ function start(voice) {
     if (!(await isModelReady('voices', voice))) throw new Error('This voice is not downloaded');
     const path = modelDir('voices', voice);
     await audio().setAudioModeAsync({ playsInSilentMode: true, shouldPlayInBackground: true });
-    return ttsLib().createTTS({ modelPath: { type: 'file', path }, modelType: 'vits', numThreads: 4 });
+    // 2 threads = the phone's fast cores; 4 also used slow ones and was slower. Lower noise keeps one steady
+    // delivery instead of Piper varying pitch and pace sentence to sentence (it sounded like the voice changing).
+    return ttsLib().createTTS({
+      modelPath: { type: 'file', path }, modelType: 'vits', numThreads: 2,
+      modelOptions: { vits: { noiseScale: 0.4, noiseScaleW: 0.5 } },
+    });
   })().catch((e) => { engine = null; engineVoice = null; throw e; });
   return engine;
 }
 
+const native = () => require('react-native').TurboModuleRegistry.getEnforcing('SherpaOnnx');
 let clip = 0;
-// Generates speech for text into a temporary WAV file and returns its path.
-export async function prepare(text, voice) {
-  const tts = await start(voice);
-  const generated = await tts.generateSpeech(text, { sid: 0, speed: 1.0 });
-  const file = `${fs().CachesDirectoryPath}/verse-${clip++ % 4}.wav`; // a few rotating files; next one is prepared while one plays
-  await ttsLib().saveAudioToFile(generated, file);
-  return file;
+let queue = Promise.resolve(); // one generation at a time: the engine is not safe to call concurrently
+
+// Generates speech for text into a temporary WAV file and returns its path. Calls run one after another;
+// wanted() lets a stopped reading skip what it had queued.
+export function prepare(text, voice, wanted = () => true) {
+  const job = queue.then(async () => {
+    if (!wanted()) throw new Error('cancelled');
+    const tts = await start(voice);
+    const file = `${fs().CachesDirectoryPath}/verse-${clip++ % 8}.wav`; // rotating files; several are prepared ahead
+    // outputPath is added by scripts/patch-sherpa.js: the WAV is written natively, no samples cross into JS
+    await native().generateTts(tts.instanceId, text, { sid: 0, speed: 1.0, outputPath: file });
+    return file;
+  });
+  queue = job.catch(() => {});
+  return job;
 }
 
 let player = null;

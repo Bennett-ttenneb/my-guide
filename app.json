@@ -2,7 +2,7 @@
   "expo": {
     "name": "My Guide",
     "slug": "morning-bible",
-    "version": "2.3.2",
+    "version": "2.3.3",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.bbotnics.myguide",
-      "versionCode": 14
+      "versionCode": 15
     },
     "web": {
       "favicon": "./assets/favicon.png"
