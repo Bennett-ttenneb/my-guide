@@ -33,6 +33,7 @@ Get the latest APK from the **[Releases page](https://github.com/Bennett-ttenneb
 - 24 topical prayers and devotionals built from scripture (financial breakthrough, spiritual warfare, healing, protection, peace, and more)
 - Bible in a year (or 30 days to 2 years, or your own length): day-by-day plan, catch-up for missed days, daily reminder and streak
 - A personal greeting by name and time of day
+- A notice on the home screen when a newer version is available
 
 ## Privacy
 
@@ -57,6 +58,7 @@ node topics.test.mjs   # every scripture reference in the devotionals
 node spoken.test.mjs   # scripture references in speech, transcript tidying
 node bibleImport.test.mjs  # OSIS, USFX, Zefania and MySword/e-Sword parsing
 node daily.test.mjs    # daily devotional rotation
+node update.test.mjs   # version comparison for the update notice
 ```
 
 ### Project layout

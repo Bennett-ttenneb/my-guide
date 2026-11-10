@@ -1,7 +1,7 @@
 # Privacy Policy
 
 **My Guide** — by BBotnics Industries
-Last updated: 7 November 2026
+Last updated: 10 November 2026
 
 My Guide is an offline Bible app. This policy explains what information the app uses and where it goes. In short: **everything you create stays on your phone. We do not collect, receive, sell or share any of your information.**
 
@@ -31,7 +31,7 @@ This information never leaves your phone unless you choose to share it (see sect
 | **Files** | To pick an audio file to transcribe, or a Bible file to import. The app only sees the file you choose. | Only when you choose "Transcribe an audio file" or "Import a Bible file" |
 | **Camera** | To take a photo for a note. | Only when you choose "Take photo" |
 | **Photos** | To add an existing photo to a note. Android's photo picker only gives the app the photos you select. | Only when you choose "Choose from gallery" |
-| **Internet** | Only to download the optional natural voices and the speech-to-text model. | Only when you tap to download one |
+| **Internet** | To check whether a newer version of the app exists, and to download the optional natural voices and the speech-to-text model. | When the app opens (version check); when you tap to download a voice or model |
 
 You can refuse or withdraw any permission in your phone's settings. The rest of the app keeps working.
 
@@ -39,7 +39,9 @@ You can refuse or withdraw any permission in your phone's settings. The rest of 
 
 The Bibles, devotionals and prayers are built into the app and work fully offline.
 
-The only time the app connects to the internet is if you choose to **download a natural AI voice** (about 20 MB each) or **the speech-to-text model** (about 55 MB). The app then contacts **GitHub** (github.com and api.github.com) to download the voice models published by the sherpa-onnx project. Like any website, GitHub receives standard technical information such as your IP address when the download happens; this is covered by [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). No personal information from the app is sent.
+When the app opens and your phone is online, it asks **GitHub** (api.github.com) for the number of the latest My Guide release, so it can tell you when an update is available. This request contains no information about you or your use of the app. If you are offline, nothing happens.
+
+The only other time the app connects to the internet is if you choose to **download a natural AI voice** (about 20 MB each) or **the speech-to-text model** (about 55 MB). The app then contacts **GitHub** (github.com and api.github.com) to download the voice models published by the sherpa-onnx project. Like any website, GitHub receives standard technical information such as your IP address when the download happens; this is covered by [GitHub's privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement). No personal information from the app is sent.
 
 ## 5. Sharing
 

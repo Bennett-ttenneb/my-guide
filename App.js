@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, Alert, FlatList, Modal, PanResponder, Pressable, Share, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Linking, Modal, PanResponder, Pressable, Share, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from 'react-native';
 import { DARK, LIGHT, ThemeContext, useTheme } from './theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -19,6 +19,7 @@ import Settings from './Settings';
 import Notes, { NoteEditor } from './Notes';
 import RichNote, { isEmptyNote } from './RichNote';
 import { discard } from './attachments';
+import { checkForUpdate, DOWNLOAD_URL } from './update';
 
 const KEY = 'morning-bible';
 const START = {
@@ -50,6 +51,8 @@ async function scheduleMorning(hour) {
 
 export default function App() {
   const [state, setState] = useState(null);
+  const [newVersion, setNewVersion] = useState(null);
+  useEffect(() => { checkForUpdate().then(setNewVersion); }, []);
   const scheme = useColorScheme();
   const theme = state?.theme ?? 'auto';
   const c = theme === 'dark' || (theme === 'auto' && scheme === 'dark') ? DARK : LIGHT;
@@ -394,6 +397,12 @@ export default function App() {
         </Pressable>
       </View>
 
+      {newVersion && (
+        <Pressable onPress={() => Linking.openURL(DOWNLOAD_URL)} style={styles.update} accessibilityRole="link">
+          <Text style={styles.updateText}>Version {newVersion} is available. Tap to download.</Text>
+        </Pressable>
+      )}
+
       <View style={styles.tabs}>
         {[['bible', 'Bible'], ['devotions', 'Devotions'], ...(split ? [] : [['notes', 'Notes']])].map(([id, label]) => (
           <Pressable key={id} onPress={() => setTab(id)} style={[styles.tab, tab === id && styles.tabOn]} accessibilityRole="tab" accessibilityState={{ selected: tab === id }}>
@@ -524,6 +533,8 @@ const makeStyles = (c) => StyleSheet.create({
   byline: { fontSize: 12, color: c.muted, fontWeight: '600', letterSpacing: 0.3 },
   chip: { minHeight: 44, paddingHorizontal: 14, borderRadius: 22, backgroundColor: c.soft, justifyContent: 'center' },
   chipText: { fontSize: 17, fontWeight: '700', color: c.accent },
+  update: { marginHorizontal: 16, marginBottom: 8, backgroundColor: c.accentSoft, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14 },
+  updateText: { color: c.accent, fontWeight: '700', fontSize: 14, textAlign: 'center' },
   tabs: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 8, backgroundColor: c.soft, borderRadius: 12, padding: 4 },
   tab: { flex: 1, minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 9 },
   tabOn: { backgroundColor: c.card },
